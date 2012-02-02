@@ -65,8 +65,11 @@ use strict;
 use warnings;
 use ExtUtils::Installed;
 
-eval "use Test::ModuleVersion";
-die "Test::ModuleVersion must be installed" if $@;
+my @required = qw/Test::ModuleVersion/;
+for my $module (@required) {
+  eval "require Test::ModuleVersion";
+  die "Test::ModuleVersion loading fail: $@" if $@;
+}
 
 my $ei = ExtUtils::Installed->new;
 
@@ -84,15 +87,16 @@ EOS
   for my $module (sort @modules) {
     next if grep { $module eq $_ } @{$self->exclude};
     my $version = $ei->version($module);
-    $code .= "\$use_ok = use_ok('$module');\n"
+    $code .= "\$use_ok = require_ok('$module');\n"
       . "\$version_ok = module_version_is('$module', \$ei->version('$module'), '$version');\n"
-      . "\$failed->{$module} = {version => $version} unless \$use_ok && \$version_ok;\n\n";
+      . "\$failed->{'$module'} = {version => '$version'} unless \$use_ok && \$version_ok;\n\n";
   }
   
   if ($self->show_lack_module_url) {
     $code .= <<'EOS';
+print "# Lacked Module URL \n";
 my $outputs = Test::ModuleVersion::_lack_module_url($failed);
-print "\n", @$outputs;
+print join("\n", @$outputs) . "\n" if @$outputs;
 EOS
   }
   
