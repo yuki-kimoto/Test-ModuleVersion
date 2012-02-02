@@ -2,7 +2,7 @@ package Test::ModuleVersion;
 use Object::Simple -base;
 use ExtUtils::Installed;
 use HTTP::Tiny;
-use JSON;
+use JSON 'decode_json';
 
 our $VERSION = '0.01';
 
@@ -20,9 +20,8 @@ sub _lack_module_url {
 
   # metaCPAN info
   my $http = HTTP::Tiny->new;
-  my $metacpan = 'http://api.metacpan.org/v0';
-  my $metacpan_api = "$metacpan/v0";
-  my $metacpan_archive = "$metacpan/authors/id";
+  my $metacpan_api = 'http://api.metacpan.org/v0';
+  my $metacpan = "http://cpan.metacpan.org";
 
   # Guess module URL
   for my $module (sort keys %$failed) {
@@ -33,30 +32,23 @@ sub _lack_module_url {
     my $version = $failed->{$module}{version};
     
     # metaCPAN api
-    my $res = $http->get("$metacpan_api/$module_dist");
+    my $res = $http->get("$metacpan_api/release/$module_dist");
     push @$outputs, "# $module url is unknown" and next
       unless $res->{success};
     my $content = $res->{content};
 
     # Latest release
-    my $latest_release = JSON::json_decode $content;
+    my $latest_release = decode_json($content);
     my $author = $latest_release->{author};
     my $index1 = substr $author, 0, 1;
-    my $index2 = substr $author, 1, 1;
+    my $index2 = substr $author, 0, 2;
     
     # metaCPAN archive
-    my $module_url = "$metacpan_archive/$module_dist-$version.tar.gz";
+    my $module_url = "$metacpan/authors/id/$index1/$index2/"
+      . "$author/$module_dist-$version.tar.gz";
     $res = $http->head($module_url);
     if ($res->{success}) { push @$outputs, "# $module_url" }
-    else {
-      # Backpan archive
-      my $backpan = "http://backpan.perl.org/authors/id";
-      my $module_url = "$backpan/$index1/$index2/"
-        . "$author/$module_dist-${version}.tar.gz";
-      my $res = $http->head($module_url);
-      if ($res->{success}) { push @$outputs, "# $module_url" }
-      else { push @$outputs, "# $module url is unknown" }
-    }
+    else { push @$outputs, "# $module url is unknown" }
   }
   return $outputs;
 }
