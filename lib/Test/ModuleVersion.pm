@@ -27,7 +27,7 @@ my $ei = ExtUtils::Installed->new;
 sub module_version_is {
   my ($module, $got, $expected) = @_;
   
-  is($got, $expected, "$module version is $got, but expected is $expected");
+  is($got, $expected, "$module version: $got");
 }
 
 EOS
@@ -35,8 +35,8 @@ EOS
   for my $module (sort @modules) {
     next if grep { $module eq $_ } @{$self->exclude};
     my $version = $ei->version($module);
-    $code .= "use_ok('$module')\n"
-      . "module_version_is('$module', \$ei->version('$module'), '$version')\n\n";
+    $code .= "use_ok('$module');\n"
+      . "module_version_is('$module', \$ei->version('$module'), '$version');\n\n";
   }
   
   return $code;
@@ -46,7 +46,7 @@ EOS
 
 =head1 NAME
 
-Test::ModuleVersion - odule Version Test Generator
+Test::ModuleVersion - Module Version Test Generator
 
 =head1 SYNOPSIS
 
