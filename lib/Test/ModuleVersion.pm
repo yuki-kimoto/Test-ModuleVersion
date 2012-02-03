@@ -75,11 +75,14 @@ EOS
   if ($self->show_lack_module_url) {
     $code .= <<'EOS';
 # Print module URLs
-for my $module (sort keys %$failed) {
-  my $version = $failed->{$module}{version};
-  my $url = Test::ModuleVersion::get_module_url($module, $version);
-  my $output = $url ? "# $url" : "# $module $version is unknown";
-  print "$output\n"; 
+if (my @modules = sort keys %$failed) {
+  print "# Lacking module URLs\n";
+  for my $module (@modules) {
+    my $version = $failed->{$module}{version};
+    my $url = Test::ModuleVersion::get_module_url($module, $version);
+    my $output = $url ? "# $url" : "# $module $version is unknown";
+    print "$output\n"; 
+  }
 }
 EOS
   }
@@ -137,8 +140,40 @@ and run the test.
 
   perl t/module.t
 
+If the version in C<production> environment is different from C<development> one,
+test will fail.
 
+  ok 15 - require DBIx::Custom;
+  not ok 16 - DBIx::Custom version: 0.2108
+  #   Failed test 'DBIx::Custom version: 0.2108'
+  #   at module.t.pl line 13.
+  #          got: '0.2106'
+  #     expected: '0.2108'
 
+It is very useful because you can know the differnce by test.
+
+=head2 Get module URLs
+
+If test fail, you install the module manually, it is very hard work.
+If you set C<show_lack_module_url> to C<1> before C<test_script> call,
+you can print module URLs in test script.
+
+  $tm->show_lack_module_url(1);
+  print $tm->test_script;
+
+If you run test script, module URLs is printed after test result.
+
+  ok 15 - require DBIx::Custom;
+  not ok 16 - DBIx::Custom version: 0.2108
+  #   Failed test 'DBIx::Custom version: 0.2108'
+  #   at module.t.pl line 13.
+  #          got: '0.2106'
+  #     expected: '0.2108'
+  
+  ...
+  
+  # http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
+  
 
 
 
