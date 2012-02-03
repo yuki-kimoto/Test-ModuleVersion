@@ -17,9 +17,11 @@ DESCRIPTION
   Many people think that it is difficult to check module version
   between development environment and  production environment.
   
+  Test::ModuleVersion help you.
+  
   1. create test script to check module version in development environment.
   2. move the test script to production environment.
-  3. run test in production environment
+  3. run test in production environment to know module difference.
 
 LICENSE AND COPYRIGHT
 
