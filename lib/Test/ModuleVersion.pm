@@ -172,10 +172,14 @@ If you run test script, module URLs is printed after test result.
   
   ...
   
+  # Lacking module URLs
   # http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
-  
 
+You can install module by C<cpanm> easily.
 
+  cpanm http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
+
+Have a fun to use L<Test::ModuleVersion>.
 
 =head1 ATTRIBUTES
 

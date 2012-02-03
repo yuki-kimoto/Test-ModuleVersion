@@ -278,9 +278,12 @@ $version_ok = module_version_is('common::sense', $version, '3.4');
 $failed->{'common::sense'} = {version => '3.4'} unless $require_ok && $version_ok;
 
 # Print module URLs
-for my $module (sort keys %$failed) {
-  my $version = $failed->{$module}{version};
-  my $url = Test::ModuleVersion::get_module_url($module, $version);
-  my $output = $url ? "# $url" : "# $module $version is unknown";
-  print "$output\n"; 
+if (my @modules = sort keys %$failed) {
+  print "# Lacking module URLs\n";
+  for my $module (@modules) {
+    my $version = $failed->{$module}{version};
+    my $url = Test::ModuleVersion::get_module_url($module, $version);
+    my $output = $url ? "# $url" : "# $module $version is unknown";
+    print "$output\n"; 
+  }
 }
