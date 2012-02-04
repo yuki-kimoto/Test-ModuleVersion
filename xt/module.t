@@ -248,13 +248,6 @@ eval { $version = $ei->version('Test::MockModule') };
 $version_ok = module_version_is('Test::MockModule', $version, '0.05');
 $failed->{'Test::MockModule'} = {version => '0.05'} unless $require_ok && $version_ok;
 
-# Test::ModuleVersion
-$require_ok = require_ok('Test::ModuleVersion');
-$version = '';
-eval { $version = $ei->version('Test::ModuleVersion') };
-$version_ok = module_version_is('Test::ModuleVersion', $version, '0.02');
-$failed->{'Test::ModuleVersion'} = {version => '0.02'} unless $require_ok && $version_ok;
-
 # Test::Pod
 $require_ok = require_ok('Test::Pod');
 $version = '';

@@ -75,6 +75,7 @@ my $version;
 EOS
   
   for my $module (sort @modules) {
+    next if grep { $module eq $_ } @{$self->exclude_default};
     next if grep { $module eq $_ } @{$self->exclude};
     my $version = $ei->version($module);
     $code .= "# $module\n"
