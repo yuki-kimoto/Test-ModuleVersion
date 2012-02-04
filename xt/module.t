@@ -297,7 +297,7 @@ if (my @modules = sort keys %$failed) {
     my $version = $failed->{$module}{version};
     my $url = Test::ModuleVersion::get_module_url($module, $version);
     if (defined $command && $command eq 'install_list') {
-      print $url if defined $url
+      print "$url\n" if defined $url
     }
     else {
       my $output = defined $url ? "# $url" : "# $module $version is unknown";
