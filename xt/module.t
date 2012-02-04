@@ -3,6 +3,19 @@ use strict;
 use warnings;
 use ExtUtils::Installed;
 
+my $command = shift;
+die qq/command "$command" is not found/
+  if defined $command && $command ne 'install_list';
+
+if (defined $command) {
+  my $builder = Test::More->builder;
+  my $out_fh;
+  open $out_fh, '>', undef;
+  $builder->output($out_fh);
+  $builder->failure_output($out_fh);
+  $builder->todo_output($out_fh);
+}
+
 eval "require Test::ModuleVersion";
 die "Test::ModuleVersion loading fail: $@" if $@;
 
@@ -239,8 +252,8 @@ $failed->{'Test::MockModule'} = {version => '0.05'} unless $require_ok && $versi
 $require_ok = require_ok('Test::ModuleVersion');
 $version = '';
 eval { $version = $ei->version('Test::ModuleVersion') };
-$version_ok = module_version_is('Test::ModuleVersion', $version, '0.01');
-$failed->{'Test::ModuleVersion'} = {version => '0.01'} unless $require_ok && $version_ok;
+$version_ok = module_version_is('Test::ModuleVersion', $version, '0.02');
+$failed->{'Test::ModuleVersion'} = {version => '0.02'} unless $require_ok && $version_ok;
 
 # Test::Pod
 $require_ok = require_ok('Test::Pod');
@@ -260,8 +273,8 @@ $failed->{'URI'} = {version => '1.59'} unless $require_ok && $version_ok;
 $require_ok = require_ok('Validator::Custom');
 $version = '';
 eval { $version = $ei->version('Validator::Custom') };
-$version_ok = module_version_is('Validator::Custom', $version, '');
-$failed->{'Validator::Custom'} = {version => ''} unless $require_ok && $version_ok;
+$version_ok = module_version_is('Validator::Custom', $version, '0.1426');
+$failed->{'Validator::Custom'} = {version => '0.1426'} unless $require_ok && $version_ok;
 
 # WWW::RobotRules
 $require_ok = require_ok('WWW::RobotRules');
@@ -279,11 +292,16 @@ $failed->{'common::sense'} = {version => '3.4'} unless $require_ok && $version_o
 
 # Print module URLs
 if (my @modules = sort keys %$failed) {
-  print "# Lacking module URLs\n";
+  print "# Lacking module URLs\n" unless defined $command;
   for my $module (@modules) {
     my $version = $failed->{$module}{version};
     my $url = Test::ModuleVersion::get_module_url($module, $version);
-    my $output = $url ? "# $url" : "# $module $version is unknown";
-    print "$output\n"; 
+    if (defined $command && $command eq 'install_list') {
+      print $url if defined $url
+    }
+    else {
+      my $output = defined $url ? "# $url" : "# $module $version is unknown";
+      print "$output\n";
+    }
   }
 }

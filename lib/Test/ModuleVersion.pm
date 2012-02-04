@@ -5,9 +5,9 @@ use ExtUtils::Installed;
 use HTTP::Tiny;
 use JSON 'decode_json';
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
-has exclude_default => sub { ['Perl'] };
+has exclude_default => sub { ['Perl', 'Test::ModuleVersion'] };
 has exclude => sub { [] };
 has show_lack_module_url => 0;
 
@@ -44,6 +44,19 @@ use strict;
 use warnings;
 use ExtUtils::Installed;
 
+my $command = shift;
+die qq/command "$command" is not found/
+  if defined $command && $command ne 'install_list';
+
+if (defined $command) {
+  my $builder = Test::More->builder;
+  my $out_fh;
+  open $out_fh, '>', undef;
+  $builder->output($out_fh);
+  $builder->failure_output($out_fh);
+  $builder->todo_output($out_fh);
+}
+
 eval "require Test::ModuleVersion";
 die "Test::ModuleVersion loading fail: $@" if $@;
 
@@ -76,12 +89,17 @@ EOS
     $code .= <<'EOS';
 # Print module URLs
 if (my @modules = sort keys %$failed) {
-  print "# Lacking module URLs\n";
+  print "# Lacking module URLs\n" unless defined $command;
   for my $module (@modules) {
     my $version = $failed->{$module}{version};
     my $url = Test::ModuleVersion::get_module_url($module, $version);
-    my $output = $url ? "# $url" : "# $module $version is unknown";
-    print "$output\n"; 
+    if (defined $command && $command eq 'install_list') {
+      print $url if defined $url
+    }
+    else {
+      my $output = defined $url ? "# $url" : "# $module $version is unknown";
+      print "$output\n";
+    }
   }
 }
 EOS
@@ -177,7 +195,24 @@ If you run test script, module URLs is printed after test result.
 
 You can install module by C<cpanm> easily.
 
-  cpanm http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
+  $ cpanm http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
+
+You can print only lacking module URLs by C<install_list> argument.
+
+  $ perl module.t install_list
+
+The output is the following-like one.
+
+  http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
+  http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/Validator-Custom-0.1426.tar.gz
+
+Installation using C<cpanm> is very easy.
+
+  $ perl module.t install_list | cpanm
+  $ perl moudle.t install_list | cpanm
+
+If at least two time you exceute the above command,
+all modules are maybe installed.
 
 Have a fun to use L<Test::ModuleVersion>.
 
@@ -193,7 +228,7 @@ Excluded modules you don't want to contain in test script.
 =head2 C<exclude_default>
 
   my $excluded_modules = $tm->exclude;
-  $tm = $tm->exclude(['Perl']);
+  $tm = $tm->exclude(['Perl', 'Test::ModuleVersion']);
 
 Default excluded modules you don't want to contain in test script,
 default to C<['Perl']>.
