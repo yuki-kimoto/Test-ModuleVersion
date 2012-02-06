@@ -70,8 +70,6 @@ if (defined $command) {
 eval "require Test::ModuleVersion";
 die "Test::ModuleVersion loading fail: $@" if $@;
 
-my $ei = ExtUtils::Installed->new;
-
 sub module_version_is {
   my ($module, $got, $expected) = @_;
   is($got, $expected, "$module version: $expected");
@@ -91,9 +89,7 @@ EOS
     next if grep { $module eq $_ } @{$self->ignore};
     $code .= "# $module\n"
       . "\$require_ok = require_ok('$module');\n"
-      . "\$version = '';\n"
-      . "eval { \$version = \$ei->version('$module') };\n"
-      . "\$version_ok = module_version_is('$module', \$version, '$version');\n"
+      . "\$version_ok = is(\$${module}::VERSION, '$version', '$module version: $version');\n"
       . "push \@\$modules, ['$module' => '$version'];\n"
       . "push \@\$failed, ['$module' => '$version'] unless \$require_ok && \$version_ok;\n\n";
   }

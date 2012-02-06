@@ -19,8 +19,6 @@ if (defined $command) {
 eval "require Test::ModuleVersion";
 die "Test::ModuleVersion loading fail: $@" if $@;
 
-my $ei = ExtUtils::Installed->new;
-
 sub module_version_is {
   my ($module, $got, $expected) = @_;
   is($got, $expected, "$module version: $expected");
@@ -34,25 +32,19 @@ my $version;
 
 # Object::Simple
 $require_ok = require_ok('Object::Simple');
-$version = '';
-eval { $version = $ei->version('Object::Simple') };
-$version_ok = module_version_is('Object::Simple', $version, '3.0624');
+$version_ok = is($Object::Simple::VERSION, '3.0624', 'Object::Simple version: 3.0624');
 push @$modules, ['Object::Simple' => '3.0624'];
 push @$failed, ['Object::Simple' => '3.0624'] unless $require_ok && $version_ok;
 
 # DBIx::Custom
 $require_ok = require_ok('DBIx::Custom');
-$version = '';
-eval { $version = $ei->version('DBIx::Custom') };
-$version_ok = module_version_is('DBIx::Custom', $version, '0.2107');
+$version_ok = is($DBIx::Custom::VERSION, '0.2107', 'DBIx::Custom version: 0.2107');
 push @$modules, ['DBIx::Custom' => '0.2107'];
 push @$failed, ['DBIx::Custom' => '0.2107'] unless $require_ok && $version_ok;
 
 # Validator::Custom
 $require_ok = require_ok('Validator::Custom');
-$version = '';
-eval { $version = $ei->version('Validator::Custom') };
-$version_ok = module_version_is('Validator::Custom', $version, '0.1426');
+$version_ok = is($Validator::Custom::VERSION, '0.1426', 'Validator::Custom version: 0.1426');
 push @$modules, ['Validator::Custom' => '0.1426'];
 push @$failed, ['Validator::Custom' => '0.1426'] unless $require_ok && $version_ok;
 
