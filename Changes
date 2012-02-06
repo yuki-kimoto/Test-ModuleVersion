@@ -1,5 +1,8 @@
-Revision history for Test-ModuleVersion
-
-0.01    Date/time
-        First version, released on an unsuspecting world.
-
+0.03
+  - renamed "exclude" attribute to "ignore"
+  - renamed "exclude_default" attribute to "default_ignore"
+0.02
+  - second release
+0.01
+  - first release
+  
