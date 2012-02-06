@@ -5,10 +5,10 @@ use ExtUtils::Installed;
 use HTTP::Tiny;
 use JSON 'decode_json';
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
-has exclude_default => sub { ['Perl', 'Test::ModuleVersion'] };
-has exclude => sub { [] };
+has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
+has ignore => sub { [] };
 has show_lack_module_url => 0;
 
 sub get_module_url {
@@ -75,8 +75,8 @@ my $version;
 EOS
   
   for my $module (sort @modules) {
-    next if grep { $module eq $_ } @{$self->exclude_default};
-    next if grep { $module eq $_ } @{$self->exclude};
+    next if grep { $module eq $_ } @{$self->default_ignore};
+    next if grep { $module eq $_ } @{$self->ignore};
     my $version = $ei->version($module);
     $code .= "# $module\n"
       . "\$require_ok = require_ok('$module');\n"
@@ -118,7 +118,7 @@ Test::ModuleVersion - Module Version Test Generator (experimental stage)
 =head1 SYNOPSIS
 
   my $tm = Test::ModuleVersion->new;
-  $tm->exclude([qw/Devel::NYTProf MySQL::Diff/]);
+  $tm->ignore([qw/Devel::NYTProf MySQL::Diff/]);
   $tm->show_lack_module_url(1);
   print $tm->test_script;
 
@@ -152,7 +152,7 @@ Briefly writting, the following-like test is created.
     require_ok('DBIx::Custom');
     module_version_is('DBIx::Custom', ExtUtils::Installed->version('DBIx::Custom'), '0.2108');
 
-=head2 Run test in <production> environment.
+=head2 Run test in C<production> environment.
 
 Second, the test script is moved to C<production> environment,
 and run the test.
@@ -219,23 +219,23 @@ Have a fun to use L<Test::ModuleVersion>.
 
 =head1 ATTRIBUTES
 
-=head2 C<exclude>
+=head2 C<ignore>
 
-  my $excluded_modules = $tm->exclude;
-  $tm = $tm->exclude([qw/Devel::NYTProf MySQL::Diff/]);
+  my $ignored_modules = $tm->ignore;
+  $tm = $tm->ignore([qw/Devel::NYTProf MySQL::Diff/]);
 
-Excluded modules you don't want to contain in test script.
+ignored modules you don't want to contain in test script.
 
-=head2 C<exclude_default>
+=head2 C<default_ignore>
 
-  my $excluded_modules = $tm->exclude;
-  $tm = $tm->exclude(['Perl', 'Test::ModuleVersion']);
+  my $ignored_modules = $tm->ignore;
+  $tm = $tm->ignore(['Perl', 'Test::ModuleVersion']);
 
-Default excluded modules you don't want to contain in test script,
+Default ignored modules you don't want to contain in test script,
 default to C<['Perl']>.
 
 Don't use C<exculde_default> attribute usually.
-use C<exclude> attribute instead.
+use C<ignore> attribute instead.
 
 =head2 C<show_lack_module_url>
 
