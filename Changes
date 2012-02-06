@@ -1,6 +1,9 @@
 0.03
   - renamed "exclude" attribute to "ignore"
   - renamed "exclude_default" attribute to "default_ignore"
+  - removed "show_lack_module_url" attribute.
+  - "list" command renamed to "list_need"
+  - added "list_all" command
 0.02
   - second release
 0.01
