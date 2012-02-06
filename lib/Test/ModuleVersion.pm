@@ -9,7 +9,19 @@ our $VERSION = '0.03';
 
 has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
 has ignore => sub { [] };
-has show_lack_module_url => 0;
+has modules => sub { [] };
+
+sub detect {
+  my $self = shift;
+  
+  # Detect installed modules
+  my $ei = ExtUtils::Installed->new;
+  my $modules = [];
+  push @$modules, [$_ => $ei->version($_)] for sort $ei->modules;
+  $self->modules($modules);
+  
+  return $self;
+}
 
 sub get_module_url {
   my ($module, $version) = @_;
@@ -35,9 +47,7 @@ sub get_module_url {
 sub test_script {
   my $self = shift;
   
-  my $ei = ExtUtils::Installed->new;
-  my @modules = $ei->modules;
-  
+  # Start test code
   my $code = <<'EOS';
 use Test::More 'no_plan';
 use strict;
@@ -46,7 +56,7 @@ use ExtUtils::Installed;
 
 my $command = shift;
 die qq/command "$command" is not found/
-  if defined $command && $command ne 'install_list';
+  if defined $command && ($command ne 'list_need' && $command ne 'list_all');
 
 if (defined $command) {
   my $builder = Test::More->builder;
@@ -67,44 +77,41 @@ sub module_version_is {
   is($got, $expected, "$module version: $expected");
 }
 
-my $failed = {};
+my $modules = [];
+my $failed = [];
 my $require_ok;
 my $version_ok;
 my $version;
 
 EOS
-  
-  for my $module (sort @modules) {
+
+  for my $m (@{$self->modules}) {
+    my ($module, $version) = @$m;
     next if grep { $module eq $_ } @{$self->default_ignore};
     next if grep { $module eq $_ } @{$self->ignore};
-    my $version = $ei->version($module);
     $code .= "# $module\n"
       . "\$require_ok = require_ok('$module');\n"
       . "\$version = '';\n"
       . "eval { \$version = \$ei->version('$module') };\n"
       . "\$version_ok = module_version_is('$module', \$version, '$version');\n"
-      . "\$failed->{'$module'} = {version => '$version'} unless \$require_ok && \$version_ok;\n\n";
+      . "push \@\$modules, ['$module' => '$version'];\n"
+      . "push \@\$failed, ['$module' => '$version'] unless \$require_ok && \$version_ok;\n\n";
   }
   
-  if ($self->show_lack_module_url) {
-    $code .= <<'EOS';
+  $code .= <<'EOS';
 # Print module URLs
-if (my @modules = sort keys %$failed) {
-  print "# Lacking module URLs\n" unless defined $command;
-  for my $module (@modules) {
-    my $version = $failed->{$module}{version};
+if (defined $command) {
+  my @ms = $command eq 'list_need' ? @$failed
+    : $command eq 'list_all' ? @$modules
+    : undef;
+  for my $m (@ms) {
+    my ($module, $version) = @$m;
     my $url = Test::ModuleVersion::get_module_url($module, $version);
-    if (defined $command && $command eq 'install_list') {
-      print "$url\n" if defined $url
-    }
-    else {
-      my $output = defined $url ? "# $url" : "# $module $version is unknown";
-      print "$output\n";
-    }
-  }
+    if (defined $url) { print "$url\n" }
+    else { print STDERR "$module $version is unknown" }
+  }  
 }
 EOS
-  }
   
   return $code;
 }
@@ -113,15 +120,26 @@ EOS
 
 =head1 NAME
 
-Test::ModuleVersion - Module Version Test Generator (experimental stage)
+Test::ModuleVersion - Module Version Test Generator (EXPERIMENTAL)
 
 =head1 SYNOPSIS
 
+  use Test::ModuleVersion;
+  
+  # Manually
   my $tm = Test::ModuleVersion->new;
-  $tm->ignore([qw/Devel::NYTProf MySQL::Diff/]);
-  $tm->show_lack_module_url(1);
+  $tm->modules([
+    ['DBIx::Custom' => '0.2108'],
+    ['Validator::Custom' => '0.1426']
+  ]);
   print $tm->test_script;
 
+  # Automatically
+  my $tm = Test::ModuleVersion->new;
+  $tm->ignore([qw/Devel::NYTProf MySQL::Diff/]);
+  $tm->detect;
+  print $tm->test_script;
+  
 =head1 DESCRIPTION
 
 It is very difficult to install same modules in development
@@ -137,20 +155,42 @@ L<Test::ModuleVersion> help you.
 
 At first, you create test script in C<development> environment.
 
-L<Test::ModuleVersion> create version checking test automatically
-by C<test_script> method.
+L<Test::ModuleVersion> create version checking test manually
+or automatically
+
+This is C<manually> eamples.
 
   my $tm = Test::ModuleVersion->new;
+  $tm->modules([
+    ['DBIx::Custom' => '0.2108'],
+    ['Validator::Custom' => '0.1426']
+  ]);
   print $tm->test_script;
 
-Using this script(name is C<mvt.pl>), you create test.
+You set C<modules> attribute which is list of module name and version number.
+You can get module test script by C<test_script> method.
+
+run this script(name is C<mvt.pl>) to create test.
 
  $ perl mvt.pl > t/module.t
 
-Briefly writting, the following-like test is created.
+the following-like test is created.
 
     require_ok('DBIx::Custom');
     module_version_is('DBIx::Custom', ExtUtils::Installed->version('DBIx::Custom'), '0.2108');
+
+    require_ok('Validator::Custom');
+    module_version_is('Validator::Custom', ExtUtils::Installed->version('Validator::Custom'), '0.1426');
+
+Or you can create module test C<automatically>.
+
+  my $tm = Test::ModuleVersion->new;
+  $tm->ignore([qw/Devel::NYTProf MySQL::Diff/]);
+  $tm->detect;
+  print $tm->test_script;
+
+C<ignore> attribute is set to modules you want to ignore.
+C<detect> method detect all installed module and C<modules> attribute is set properly.
 
 =head2 Run test in C<production> environment.
 
@@ -162,58 +202,41 @@ and run the test.
 If the version in C<production> environment is different from C<development> one,
 test will fail.
 
-  ok 15 - require DBIx::Custom;
-  not ok 16 - DBIx::Custom version: 0.2108
+  ok 1 - require DBIx::Custom;
+  not ok 2 - DBIx::Custom version: 0.2108
   #   Failed test 'DBIx::Custom version: 0.2108'
   #   at module.t.pl line 13.
   #          got: '0.2106'
   #     expected: '0.2108'
 
-It is very useful because you can know the differnce by test.
+  ok 2 - require Validator::Custom;
+  ok 3 - Validator::Custom version: 0.1426
+
+It is very useful because you can know the module differnce.
 
 =head2 Get module URLs
 
 If test fail, you install the module manually, it is very hard work.
-If you set C<show_lack_module_url> to C<1> before C<test_script> call,
-you can print module URLs in test script.
+you can get lacking module URLs by C<list_need> command.
 
-  $tm->show_lack_module_url(1);
-  print $tm->test_script;
-
-If you run test script, module URLs is printed after test result.
-
-  ok 15 - require DBIx::Custom;
-  not ok 16 - DBIx::Custom version: 0.2108
-  #   Failed test 'DBIx::Custom version: 0.2108'
-  #   at module.t.pl line 13.
-  #          got: '0.2106'
-  #     expected: '0.2108'
-  
-  ...
-  
-  # Lacking module URLs
-  # http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
-
-You can install module by C<cpanm> easily.
-
-  $ cpanm http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
-
-You can print only lacking module URLs by C<install_list> argument.
-
-  $ perl module.t install_list
+  $ perl module.t list_need
 
 The output is the following-like one.
 
   http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
-  http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/Validator-Custom-0.1426.tar.gz
+  ...
+
+Internally, metaCPAN api is used to get module URL.
+User Agent is L<HTTP::Tiny>. if you have proxy server,
+you can set $ENV{http_proxy}.
 
 Installation using C<cpanm> is very easy.
 
-  $ perl module.t install_list | cpanm
-  $ perl moudle.t install_list | cpanm
+  $ perl module.t list_need | cpanm
 
-If at least two time you exceute the above command,
-all modules are maybe installed.
+You can also print all modules in test by C<list_all> command.
+
+  $ perl module.t list_all
 
 Have a fun to use L<Test::ModuleVersion>.
 
@@ -237,38 +260,32 @@ default to C<['Perl']>.
 Don't use C<exculde_default> attribute usually.
 use C<ignore> attribute instead.
 
-=head2 C<show_lack_module_url>
+=head2 C<modules>
 
-  my $show_lack_module_url = $tm->show_lack_module_url;
-  $tm = $tm->show_lack_module_url(1);
+  my $modules = $tm->modules;
+  $tm = $tm->modules($modules);
 
-If this value is true,
-C<test_script> contains a logic to show URLs
-of module which version test is failed.
-Default to C<0>.
+List of Module name and version.
 
-You can get the following-like outputs when test script will run.
+  $tm->modules([
+    ['DBIx::Custom' => '0.2108'],
+    ['Validator::Custom' => '0.1426']
+  ]);
 
-  # http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
-  # http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/Validator-Custom-0.1426.tar.gz
-  # http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/Object-Simple-3.0625.tar.gz
+Version number must be string like C<'0.1426'>, not C<0.1426>.
 
-This is very useful because you can finish module installation by C<cpanm>
-
-  cpanm http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
-  cpanm http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/Validator-Custom-0.1426.tar.gz
-  cpanm http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/Object-Simple-3.0625.tar.gz
+If C<detect> method is executed, C<modules> attribute is set automatically.
 
 =head1 METHODS
 
 L<DBIx::Custom> inherits all methods from L<Object::Simple>
 and implements the following new ones.
 
-=head2 C<test_script>
+=head2 C<detect>
 
-  print $tm->test_script;
+  $tm->detect;
 
-Test script which contains module version tests.
+Detect all installed module and C<modules> attribute is set.
 
 =head2 C<get_module_url>
 
@@ -281,6 +298,13 @@ Get module URL by module name and version number.
 
 You must specify version number as string, not number.
 for example, I<0.2110> is wrong, I<'0.2110'> is right.
+
+=head2 C<test_script>
+
+  print $tm->test_script;
+
+Test script which contains module version tests.
+C<modules> attirubtes is used to create test script.
 
 =head1 AUTHOR
 
