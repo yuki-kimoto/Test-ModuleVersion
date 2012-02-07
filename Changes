@@ -1,3 +1,6 @@
+0.04
+  - added "lib" attribute
+  - added test count to test script
 0.03
   - renamed "exclude" attribute to "ignore"
   - renamed "exclude_default" attribute to "default_ignore"

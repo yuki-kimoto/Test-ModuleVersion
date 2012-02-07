@@ -1,4 +1,4 @@
-use Test::More 'no_plan';
+use Test::More tests => 72;
 use strict;
 use warnings;
 use ExtUtils::Installed;
