@@ -5,6 +5,7 @@ use Test::ModuleVersion;
 
 {
   my $tm = Test::ModuleVersion->new;
+  $tm->lib(['extlib/lib/perl5']);
   $tm->modules([
     ['Object::Simple' => '3.0624'],
     ['DBIx::Custom' => '0.2107'],

@@ -53,6 +53,12 @@ sub test_script {
 use strict;
 use warnings;
 use ExtUtils::Installed;
+use FindBin;
+EOS
+  
+  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @{$self->lib};
+
+  $code .= <<'EOS';
 
 my $command = shift;
 die qq/command "$command" is not found/
@@ -242,6 +248,19 @@ You can also print all modules in test by C<list_all> command.
 Have a fun to use L<Test::ModuleVersion>.
 
 =head1 ATTRIBUTES
+
+=head2 C<lib>
+
+  my $lib = $self->lib;
+  $tm = $tm->lib(['extlib/lib/perl5']);
+
+Module including pass from script directory.
+The following code is added to test script.
+
+  use lib "$FindBin::Bin/extlib/lib/perl5";
+
+If the module is installed in this directory,
+module version test is success.
 
 =head2 C<ignore>
 

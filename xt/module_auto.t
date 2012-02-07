@@ -2,6 +2,7 @@ use Test::More tests => 72;
 use strict;
 use warnings;
 use ExtUtils::Installed;
+use FindBin;
 
 my $command = shift;
 die qq/command "$command" is not found/

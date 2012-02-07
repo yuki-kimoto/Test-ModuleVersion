@@ -2,6 +2,8 @@ use Test::More tests => 6;
 use strict;
 use warnings;
 use ExtUtils::Installed;
+use FindBin;
+use lib "$FindBin::Bin/extlib/lib/perl5";
 
 my $command = shift;
 die qq/command "$command" is not found/
