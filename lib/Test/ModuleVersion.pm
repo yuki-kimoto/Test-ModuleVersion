@@ -2632,7 +2632,7 @@ EOS
 sub main {
   my $command = shift;
   die qq/command "$command" is not found/
-    if defined $command && ($command ne 'list_need' && $command ne 'list_all');
+    if defined $command && ($command ne 'list_fail' && $command ne 'list');
 
   if (defined $command) {
     my $builder = Test::More->builder;
@@ -2668,8 +2668,8 @@ EOS
   $code .= <<'EOS';
   # Print module URLs
   if (defined $command) {
-    my @ms = $command eq 'list_need' ? @$failed
-      : $command eq 'list_all' ? @$modules
+    my @ms = $command eq 'list_fail' ? @$failed
+      : $command eq 'list' ? @$modules
       : undef;
     for my $m (@ms) {
       my ($module, $version) = @$m;
@@ -2814,9 +2814,9 @@ It is very useful because you can know the module differnce.
 =head2 Get module URLs
 
 If test fail, you install the module manually, it is very hard work.
-you can get lacking module URLs by C<list_need> command.
+you can get lacking module URLs by C<list_fail> command.
 
-  $ perl module.t list_need
+  $ perl module.t list_fail
 
 The output is the following-like one.
 
@@ -2829,11 +2829,11 @@ you can set $ENV{http_proxy}.
 
 Installation using C<cpanm> is very easy.
 
-  $ perl module.t list_need | cpanm
+  $ perl module.t list_fail | cpanm
 
-You can also print all modules in test by C<list_all> command.
+You can also print all modules in test by C<list> command.
 
-  $ perl module.t list_all
+  $ perl module.t list
 
 Have a fun to use L<Test::ModuleVersion>.
 

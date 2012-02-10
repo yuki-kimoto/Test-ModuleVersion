@@ -8,7 +8,7 @@ use lib "$FindBin::Bin/extlib/lib/perl5";
 sub main {
   my $command = shift;
   die qq/command "$command" is not found/
-    if defined $command && ($command ne 'list_need' && $command ne 'list_all');
+    if defined $command && ($command ne 'list_fail' && $command ne 'list');
 
   if (defined $command) {
     my $builder = Test::More->builder;
@@ -44,8 +44,8 @@ sub main {
 
   # Print module URLs
   if (defined $command) {
-    my @ms = $command eq 'list_need' ? @$failed
-      : $command eq 'list_all' ? @$modules
+    my @ms = $command eq 'list_fail' ? @$failed
+      : $command eq 'list' ? @$modules
       : undef;
     for my $m (@ms) {
       my ($module, $version) = @$m;
@@ -2690,7 +2690,7 @@ EOS
 sub main {
   my $command = shift;
   die qq/command "$command" is not found/
-    if defined $command && ($command ne 'list_need' && $command ne 'list_all');
+    if defined $command && ($command ne 'list_fail' && $command ne 'list');
 
   if (defined $command) {
     my $builder = Test::More->builder;
@@ -2726,8 +2726,8 @@ EOS
   $code .= <<'EOS';
   # Print module URLs
   if (defined $command) {
-    my @ms = $command eq 'list_need' ? @$failed
-      : $command eq 'list_all' ? @$modules
+    my @ms = $command eq 'list_fail' ? @$failed
+      : $command eq 'list' ? @$modules
       : undef;
     for my $m (@ms) {
       my ($module, $version) = @$m;
