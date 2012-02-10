@@ -2675,7 +2675,7 @@ EOS
       my ($module, $version) = @$m;
       my $url = Test::ModuleVersion::get_module_url($module, $version);
       if (defined $url) { print "$url\n" }
-      else { print STDERR "$module $version is unknown" }
+      else { print STDERR "$module $version is unknown\n" }
     }  
   }
 }

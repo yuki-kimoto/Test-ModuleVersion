@@ -18,3 +18,4 @@
 ^xt/extlib/
 ^xt/module.t.pl
 ^xt/module_auto.t.pl
+^xt/output/
