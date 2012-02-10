@@ -1,3 +1,7 @@
+0.05
+  - reduced Object::Simple dependency
+  - reduced HTTP::Tiny dependency
+  - reduced JSON dependency
 0.04
   - added "lib" attribute
   - added test count to test script

@@ -16,3 +16,5 @@
 \.db$
 \.run$
 ^xt/extlib/
+^xt/module.t.pl
+^xt/module_auto.t.pl

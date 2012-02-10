@@ -11,7 +11,7 @@ use Test::ModuleVersion;
     ['DBIx::Custom' => '0.2107'],
     ['Validator::Custom' => '0.1426']
   ]);
-  open my $fh, '>', "$FindBin::Bin/module_manual.t"
+  open my $fh, '>', "$FindBin::Bin/module.t.pl"
     or die $!;
   print $fh $tm->test_script;
 }
@@ -20,7 +20,7 @@ use Test::ModuleVersion;
   my $tm = Test::ModuleVersion->new;
   $tm->ignore([qw/TimeDate Mail/]);
   $tm->detect;
-  open my $fh, '>', "$FindBin::Bin/module_auto.t"
+  open my $fh, '>', "$FindBin::Bin/module_auto.t.pl"
     or die $!;
   print $fh $tm->test_script;
 }
