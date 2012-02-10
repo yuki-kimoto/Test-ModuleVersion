@@ -2621,7 +2621,6 @@ use strict;
 use warnings;
 use ExtUtils::Installed;
 use FindBin;
-
 EOS
   
   # Library path
@@ -2691,6 +2690,9 @@ EOS
   
   # Test count
   $code = "use Test::More tests => $test_count;\n" . $code;
+
+  # Reffer this module
+  $code = "# Created by Test::ModuleVersion $Test::ModuleVersion::VERSION\n" . $code;
   
   return $code;
 }
