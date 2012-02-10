@@ -1,12 +1,155 @@
 package Test::ModuleVersion;
-use Object::Simple -base;
-use 5.008001;
+our $VERSION = '0.05';
+
+package
+  Test::ModuleVersion::Object::Simple;
+
+our $VERSION = '3.0626';
+
+use strict;
+use warnings;
+no warnings 'redefine';
+
+use Carp ();
+
+sub import {
+    my ($class, @methods) = @_;
+    
+    # Caller
+    my $caller = caller;
+    
+    # Base
+    if ((my $flag = $methods[0] || '') eq '-base') {
+
+        # Can haz?
+        no strict 'refs';
+        no warnings 'redefine';
+        *{"${caller}::has"} = sub { attr($caller, @_) };
+        
+        # Inheritance
+        if (my $module = $methods[1]) {
+            $module =~ s/::|'/\//g;
+            require "$module.pm" unless $module->can('new');
+            push @{"${caller}::ISA"}, $module;
+        }
+        else {
+            push @{"${caller}::ISA"}, $class;
+        }
+
+        # strict!
+        strict->import;
+        warnings->import;
+
+        # Modern!
+        feature->import(':5.10') if $] >= 5.010;        
+    }
+    # Method export
+    else {
+        
+        # Exports
+        my %exports = map { $_ => 1 } qw/new attr class_attr dual_attr/;
+        
+        # Export methods
+        foreach my $method (@methods) {
+            
+            # Can be Exported?
+            Carp::croak("Cannot export '$method'.")
+              unless $exports{$method};
+            
+            # Export
+            no strict 'refs';
+            *{"${caller}::$method"} = \&{"$method"};
+        }
+    }
+}
+
+sub new {
+  my $class = shift;
+  bless @_ ? @_ > 1 ? {@_} : {%{$_[0]}} : {}, ref $class || $class;
+}
+
+sub attr {
+    my ($self, @args) = @_;
+    
+    my $class = ref $self || $self;
+    
+    # Fix argument
+    unshift @args, (shift @args, undef) if @args % 2;
+    
+    for (my $i = 0; $i < @args; $i += 2) {
+        
+        # Attribute name
+        my $attrs = $args[$i];
+        $attrs = [$attrs] unless ref $attrs eq 'ARRAY';
+        
+        # Default
+        my $default = $args[$i + 1];
+        
+        foreach my $attr (@$attrs) {
+
+            Carp::croak("Default value of attr must be string or number " . 
+                        "or code reference (${class}::$attr)")
+              unless !ref $default || ref $default eq 'CODE';
+
+        # Code
+        my $code;
+        if (defined $default && ref $default) {
+
+
+
+$code = sub {
+    if(@_ == 1) {
+        return $_[0]->{$attr} = $default->($_[0]) unless exists $_[0]->{$attr};
+        return $_[0]->{$attr};
+    }
+    $_[0]->{$attr} = $_[1];
+    $_[0];
+}
+
+        }
+        elsif (defined $default && ! ref $default) {
+
+
+
+$code = sub {
+    if(@_ == 1) {
+        return $_[0]->{$attr} = $default unless exists $_[0]->{$attr};
+        return $_[0]->{$attr};
+    }
+    $_[0]->{$attr} = $_[1];
+    $_[0];
+}
+
+
+
+    }
+    else {
+
+
+
+$code = sub {
+    return $_[0]->{$attr} if @_ == 1;
+    $_[0]->{$attr} = $_[1];
+    $_[0];
+}
+
+
+
+    }
+            
+            no strict 'refs';
+            *{"${class}::$attr"} = $code;
+        }
+    }
+}
+
+package Test::ModuleVersion;
+our @ISA = ('Test::ModuleVersion::Object::Simple');
 use ExtUtils::Installed;
 use HTTP::Tiny;
 use JSON 'decode_json';
 
-our $VERSION = '0.04';
-
+sub has { __PACKAGE__->Test::ModuleVersion::Object::Simple::attr(@_) }
 has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
 has ignore => sub { [] };
 has lib => sub { [] };
@@ -116,6 +259,8 @@ EOS
   
   return $code;
 }
+
+
 
 1;
 
@@ -291,9 +436,6 @@ Version number must be string like C<'0.1426'>, not C<0.1426>.
 If C<detect> method is executed, C<modules> attribute is set automatically.
 
 =head1 METHODS
-
-L<DBIx::Custom> inherits all methods from L<Object::Simple>
-and implements the following new ones.
 
 =head2 C<detect>
 

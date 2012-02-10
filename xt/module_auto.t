@@ -69,9 +69,9 @@ push @$failed, ['DBIx::Connector' => '0.47'] unless $require_ok && $version_ok;
 
 # DBIx::Custom
 $require_ok = require_ok('DBIx::Custom');
-$version_ok = is($DBIx::Custom::VERSION, '0.2108', 'DBIx::Custom version: 0.2108');
-push @$modules, ['DBIx::Custom' => '0.2108'];
-push @$failed, ['DBIx::Custom' => '0.2108'] unless $require_ok && $version_ok;
+$version_ok = is($DBIx::Custom::VERSION, '0.2109', 'DBIx::Custom version: 0.2109');
+push @$modules, ['DBIx::Custom' => '0.2109'];
+push @$failed, ['DBIx::Custom' => '0.2109'] unless $require_ok && $version_ok;
 
 # EV
 $require_ok = require_ok('EV');

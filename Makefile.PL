@@ -14,9 +14,6 @@ WriteMakefile(
     PL_FILES            => {},
     PREREQ_PM => {
         'Test::More' => 0,
-        'Object::Simple' => '3.0625',
-        'HTTP::Tiny' => '0.016',
-        JSON => '2.53'
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Test-ModuleVersion-*' },
