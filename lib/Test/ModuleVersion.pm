@@ -2574,6 +2574,7 @@ use ExtUtils::Installed;
 use Carp 'croak';
 
 sub has { __PACKAGE__->Test::ModuleVersion::Object::Simple::attr(@_) }
+has comment => '';
 has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
 has ignore => sub { [] };
 has lib => sub { [] };
@@ -2615,8 +2616,26 @@ sub get_module_url {
 sub test_script {
   my $self = shift;
   
+  # Code
+  my $code;
+  
+  # Comment
+  my $comment = $self->comment;
+  $code .= <<"EOS" if $comment;
+=pod
+
+$comment
+
+=cut
+
+EOS
+  
+  # Reffer this module
+  $code .= "# Created by Test::ModuleVersion $Test::ModuleVersion::VERSION\n";
+
   # Test code
-  my $code = <<'EOS';
+  $code .= <<'EOS';
+use Test::More;
 use strict;
 use warnings;
 use ExtUtils::Installed;
@@ -2646,6 +2665,8 @@ sub main {
   my $require_ok;
   my $version_ok;
   my $version;
+  
+  plan tests => <%%%%%% test_count %%%%%%>;
 
 EOS
   
@@ -2689,10 +2710,7 @@ EOS
     . "main(\@ARGV);\n";
   
   # Test count
-  $code = "use Test::More tests => $test_count;\n" . $code;
-
-  # Reffer this module
-  $code = "# Created by Test::ModuleVersion $Test::ModuleVersion::VERSION\n" . $code;
+  $code =~ s/<%%%%%% test_count %%%%%%>/$test_count/e;
   
   return $code;
 }
@@ -2840,6 +2858,21 @@ You can also print all modules in test by C<list> command.
 Have a fun to use L<Test::ModuleVersion>.
 
 =head1 ATTRIBUTES
+
+=head2 C<comment>
+
+  my $comment = $self->comment;
+  $tm = $tm->comment($comment);
+
+Comment
+
+You can embbed comment into test script.
+
+  $tm->comment(<<'EOS');
+  You can create this test script by the following command.
+
+    perl mvt.pl > t/module.t
+  EOS
 
 =head2 C<lib>
 

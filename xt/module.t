@@ -6,6 +6,11 @@ use FindBin;
 
 {
   my $tm = Test::ModuleVersion->new;
+  $tm->comment(<<'EOS');
+You can this test script by the following command
+
+  perl mvt.pl > t/module.t
+EOS
   $tm->lib(['extlib/lib/perl5']);
   $tm->modules([
     ['Object::Simple' => '3.0625'],
@@ -15,6 +20,7 @@ use FindBin;
   my $file = "$FindBin::Bin/output/module.t.output";
   open my $fh, '>', $file
     or die qr/Can't open file "$file": $!/;
+  like($tm->test_script, qr#\Qperl mvt.pl > t/module.t#);
   
   my $output;
   
@@ -34,6 +40,7 @@ use FindBin;
   like($output, qr/Object-Simple-3.0625/);
   like($output, qr/Validator-Custom-0.1401/);
   unlike($output, qr/___NotExitst/);
+  unlike($output, qr/\d\.\.\d/);
 
   $output = `perl $file list_fail`;
   like($output, qr/http/);

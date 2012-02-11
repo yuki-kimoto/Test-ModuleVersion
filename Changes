@@ -1,3 +1,6 @@
+0.06
+  - added comment attribute
+  - fixed bug that test number is printed when command is specified
 0.05
   - reduced Object::Simple dependency
   - reduced HTTP::Tiny dependency
