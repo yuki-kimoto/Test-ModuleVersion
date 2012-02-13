@@ -1,4 +1,5 @@
 0.06
+  - require Perl 5.008007
   - added comment attribute
   - fixed bug that test number is printed when command is specified
 0.05

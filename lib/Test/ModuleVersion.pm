@@ -1,5 +1,6 @@
+use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.05';
+our $VERSION = '0.07';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2575,6 +2576,7 @@ use Carp 'croak';
 
 sub has { __PACKAGE__->Test::ModuleVersion::Object::Simple::attr(@_) }
 has comment => '';
+has distnames => sub { {} };
 has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
 has ignore => sub { [] };
 has lib => sub { [] };
@@ -2643,10 +2645,12 @@ use FindBin;
 EOS
   
   # Library path
-  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @{$self->lib};
+  my $libs = ref $self->lib ? $self->lib : [$self->lib];
+  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @$libs;
   
   # Main
   $code .= <<'EOS';
+
 sub main {
   my $command = shift;
   die qq/command "$command" is not found/
@@ -2877,7 +2881,8 @@ You can embbed comment into test script.
 =head2 C<lib>
 
   my $lib = $self->lib;
-  $tm = $tm->lib(['extlib/lib/perl5']);
+  $tm = $tm->lib('extlib/lib/perl5');
+  $tm = $tm->lib(['extlib/lib/perl5', ...]);
 
 Module including pass from script directory.
 The following code is added to test script.
