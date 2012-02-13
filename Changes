@@ -1,3 +1,7 @@
+0.07
+  - lib attribute can be set as string
+  - added distnames attribute to resolve distribution name
+    when module name is not same as distribution name.
 0.06
   - require Perl 5.008007
   - added comment attribute
