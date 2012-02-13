@@ -2885,7 +2885,12 @@ You can embbed comment into test script.
 
   my $distnames = $self->distnames;
   $tm = $tm->distnames({
-    LWP => 'libwww-perl',
+    'LWP' => 'libwww-perl',
+    'IO::Compress::Base' => 'IO-Compress',
+    'Cwd' => 'PathTools',
+    'File::Spec' => 'PathTools',
+    'List::Util' => 'Scalar-List-Utils',
+    'Scalar::Util' => 'Scalar-List-Utils'
     ...
   });
 
