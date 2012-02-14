@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2573,6 +2573,7 @@ use strict;
 use warnings;
 use ExtUtils::Installed;
 use Carp 'croak';
+use Data::Dumper;
 
 sub has { __PACKAGE__->Test::ModuleVersion::Object::Simple::attr(@_) }
 has comment => '';
@@ -2595,11 +2596,13 @@ sub detect {
 }
 
 sub get_module_url {
-  my ($self, $module, $version) = @_;
+  my ($self, $module, $version, $opts) = @_;
+  
+  $opts ||= {};
+  my $distnames = $opts->{distnames} || {};
   
   # Module
   my $module_dist = $module;
-  my $distnames = $self->distnames;
   $module_dist = $distnames->{$module} if defined $distnames->{$module};
   $module_dist =~ s/::/-/g;
   
@@ -2655,9 +2658,14 @@ EOS
 
 sub main {
   my $command = shift;
-  die qq/command "$command" is not found/
-    if defined $command && ($command ne 'list_fail' && $command ne 'list');
-
+  my $option = shift;
+  
+  die qq/command "$command" is unkonwn command/
+    if defined $command && $command ne 'list';
+  
+  die qq/list $option is unknown option/
+    if defined $option && $option ne '--fail';
+  
   if (defined $command) {
     my $builder = Test::More->builder;
     open my $out_fh, '>', undef;
@@ -2694,13 +2702,15 @@ EOS
   $code .= <<'EOS';
   # Print module URLs
   if (defined $command) {
+    my $distnames = <%%%%%% distnames %%%%%%>
+    ;
     my $tm = Test::ModuleVersion->new;
-    my @ms = $command eq 'list_fail' ? @$failed
+    my @ms = $command eq 'list' && ($option || '') eq '--fail' ? @$failed
       : $command eq 'list' ? @$modules
-      : undef;
+      : [];
     for my $m (@ms) {
       my ($module, $version) = @$m;
-      my $url = $tm->get_module_url($module, $version);
+      my $url = $tm->get_module_url($module, $version, {distnames => $distnames});
       if (defined $url) { print "$url\n" }
       else { print STDERR "$module $version is unknown\n" }
     }  
@@ -2718,6 +2728,10 @@ EOS
   
   # Test count
   $code =~ s/<%%%%%% test_count %%%%%%>/$test_count/e;
+  
+  # Distribution names
+  my $distnames_code = Data::Dumper->new([$self->distnames])->Terse(1)->Indent(2)->Dump;
+  $code =~ s/<%%%%%% distnames %%%%%%>/$distnames_code/e;
   
   return $code;
 }
