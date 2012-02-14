@@ -1,6 +1,7 @@
 0.08
   - removed "list_fail" command, and added "list --fail" option
   - fixed bug that distnames is ignored in test script
+  - added privates attribute to use private repositories
 0.07
   - lib attribute can be set as string
   - added distnames attribute to resolve distribution name

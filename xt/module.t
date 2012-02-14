@@ -5,6 +5,51 @@ use Test::ModuleVersion;
 use FindBin;
 
 {
+  # privates
+  my $tm = Test::ModuleVersion->new;
+  $tm->privates({
+    'Some::Module' => 'http://localhost/~kimoto/%M.tar.gz'
+  });
+  $tm->modules([
+    ['Some::Module' => '0.01']
+  ]);
+  my $file = "$FindBin::Bin/output/module.t.output";
+  open my $fh, '>', $file
+    or die qr/Can't open file "$file": $!/;
+  
+  my $output;
+  
+  $| = 1;
+  print $fh $tm->test_script;
+  $output = `perl $file list`;
+  like($output, qr#http://localhost/~kimoto/Some-Module-0.01.tar.gz#);
+}
+
+{
+  # privates with distnames
+  my $tm = Test::ModuleVersion->new;
+  $tm->distnames({
+    'Some::Module' => 'somemod'
+  });
+  $tm->privates({
+    'Some::Module' => 'http://localhost/~kimoto/%M.tar.gz'
+  });
+  $tm->modules([
+    ['Some::Module' => '0.01']
+  ]);
+  my $file = "$FindBin::Bin/output/module.t.output";
+  open my $fh, '>', $file
+    or die qr/Can't open file "$file": $!/;
+  
+  my $output;
+  
+  $| = 1;
+  print $fh $tm->test_script;
+  $output = `perl $file list`;
+  like($output, qr#http://localhost/~kimoto/somemod-0.01.tar.gz#);
+}
+
+{
   # Basci test
   my $tm = Test::ModuleVersion->new;
   $tm->comment(<<'EOS');
@@ -80,7 +125,6 @@ EOS
 {
   # distnames
   my $tm = Test::ModuleVersion->new;
-  $tm->lib('extlib/lib/perl5');
   $tm->distnames({
     'LWP' => 'libwww-perl',
     'IO::Compress::Base' => 'IO-Compress',
@@ -111,3 +155,4 @@ EOS
   like($output, qr/PathTools-3.33.*PathTools-3.33/ms);
   like($output, qr/Scalar-List-Utils-1.23.*Scalar-List-Utils-1.23/ms);
 }
+

@@ -2582,6 +2582,7 @@ has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
 has ignore => sub { [] };
 has lib => sub { [] };
 has modules => sub { [] };
+has privates => sub { {} };
 
 sub detect {
   my $self = shift;
@@ -2600,21 +2601,29 @@ sub get_module_url {
   
   $opts ||= {};
   my $distnames = $opts->{distnames} || {};
-  
+  my $privates = $opts->{privates} || {};
+
   # Module
   my $module_dist = $module;
   $module_dist = $distnames->{$module} if defined $distnames->{$module};
   $module_dist =~ s/::/-/g;
-  
-  # Get dounload URL using metaCPAN api
-  my $metacpan_api = 'http://api.metacpan.org/v0';
-  my $search = "release/_search?q=name:$module_dist-$version"
-    . "&fields=download_url,name";
-  my $http = Test::ModuleVersion::HTTP::Tiny->new;
-  my $res = $http->get("$metacpan_api/$search");
-  if ($res->{success}) {
-    my $release = Test::ModuleVersion::JSON::PP::decode_json $res->{content};
-    return $release->{hits}{hits}[0]{fields}{download_url};
+
+  if (my $url = $privates->{$module}) {
+    $url =~ s/%M/"$module_dist-$version"/e;
+    return $url;
+  }
+  else {
+    
+    # Get dounload URL using metaCPAN api
+    my $metacpan_api = 'http://api.metacpan.org/v0';
+    my $search = "release/_search?q=name:$module_dist-$version"
+      . "&fields=download_url,name";
+    my $http = Test::ModuleVersion::HTTP::Tiny->new;
+    my $res = $http->get("$metacpan_api/$search");
+    if ($res->{success}) {
+      my $release = Test::ModuleVersion::JSON::PP::decode_json $res->{content};
+      return $release->{hits}{hits}[0]{fields}{download_url};
+    }
   }
   
   return;
@@ -2704,13 +2713,16 @@ EOS
   if (defined $command) {
     my $distnames = <%%%%%% distnames %%%%%%>
     ;
+    my $privates = <%%%%%% privates %%%%%%>
+    ;
     my $tm = Test::ModuleVersion->new;
     my @ms = $command eq 'list' && ($option || '') eq '--fail' ? @$failed
       : $command eq 'list' ? @$modules
       : [];
     for my $m (@ms) {
       my ($module, $version) = @$m;
-      my $url = $tm->get_module_url($module, $version, {distnames => $distnames});
+      my $url = $tm->get_module_url($module, $version,
+        {distnames => $distnames, privates => $privates});
       if (defined $url) { print "$url\n" }
       else { print STDERR "$module $version is unknown\n" }
     }  
@@ -2732,6 +2744,10 @@ EOS
   # Distribution names
   my $distnames_code = Data::Dumper->new([$self->distnames])->Terse(1)->Indent(2)->Dump;
   $code =~ s/<%%%%%% distnames %%%%%%>/$distnames_code/e;
+
+  # Private repositories
+  my $privates_code = Data::Dumper->new([$self->privates])->Terse(1)->Indent(2)->Dump;
+  $code =~ s/<%%%%%% privates %%%%%%>/$privates_code/e;
   
   return $code;
 }
@@ -2964,6 +2980,20 @@ List of Module name and version.
 Version number must be string like C<'0.1426'>, not C<0.1426>.
 
 If C<detect> method is executed, C<modules> attribute is set automatically.
+
+=head2 C<privates>
+
+  my $privates = $tm->privates;
+  $tm = $tm->privates({
+    'Some::Module' => 'http://localhost/~kimoto/%M.tar.gz'
+  });
+
+Private repogitory URL. If you use C<privates> attribute,
+you don't need upload module to C<CPAN>.
+You upload module to some place you can access by C<http> protocal.
+
+C<%M> is replaces module name and version number, like Some-Module-0.01.
+You also use this attribute with C<distnames> attribute.
 
 =head1 METHODS
 
