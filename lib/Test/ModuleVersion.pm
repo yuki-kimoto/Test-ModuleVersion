@@ -2602,6 +2602,7 @@ sub get_module_url {
   $opts ||= {};
   my $distnames = $opts->{distnames} || {};
   my $privates = $opts->{privates} || {};
+  my $lwp = $opts->{lwp};
 
   # Module
   my $module_dist = $module;
@@ -2618,10 +2619,32 @@ sub get_module_url {
     my $metacpan_api = 'http://api.metacpan.org/v0';
     my $search = "release/_search?q=name:$module_dist-$version"
       . "&fields=download_url,name";
-    my $ua = Test::ModuleVersion::HTTP::Tiny->new;
     my $module_info = "$metacpan_api/$search";
-    my $res = $ua->get($module_info);
-    $res->{status_line} = "$res->{status} $res->{reason}";
+    my $res = {};
+    my $agent;
+    if ($lwp) {
+      $agent = 'LWP::UserAgent';
+      my $ua = LWP::UserAgent->new(
+        parse_head => 0,
+        env_proxy => 1,
+        agent => "Test::ModuleVersion/$VERSION",
+        timeout => 30
+      );
+      my $r = $ua->get($module_info);
+      $agent = 'LWP::UserAgent';
+      $res->{success} = $r->is_success;
+      $res->{status_line} = $r->status_line;
+      $res->{content} = $r->content;
+    }
+    else {
+      $agent = 'HTTP::Tiny';
+      my $ua = Test::ModuleVersion::HTTP::Tiny->new;
+      my $r = $ua->get($module_info);
+      $res->{success} = $r->{success};
+      $res->{status_line} = "$r->{status} $r->{reason}";
+      $res->{content} = $r->{content};
+    }
+    
     my $error;
     if ($res->{success} && !$ENV{TEST_MODULEVERSION_REQUEST_FAIL}) {
       my $release = Test::ModuleVersion::JSON::PP::decode_json $res->{content};
@@ -2629,7 +2652,7 @@ sub get_module_url {
       $error = "$module_dist-$version is unknown" unless defined $url;
     }
     else {
-      $error = "Request to metaCPAN fail($res->{status_line}): $module_info";
+      $error = "Request to metaCPAN fail($res->{status_line}):$agent:$module_info";
     }
     ${$opts->{error}} = $error if ref $opts->{error};
   }
