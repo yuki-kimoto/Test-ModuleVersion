@@ -2618,9 +2618,9 @@ sub get_module_url {
     my $metacpan_api = 'http://api.metacpan.org/v0';
     my $search = "release/_search?q=name:$module_dist-$version"
       . "&fields=download_url,name";
-    my $http = Test::ModuleVersion::HTTP::Tiny->new;
+    my $ua = Test::ModuleVersion::HTTP::Tiny->new;
     my $module_info = "$metacpan_api/$search";
-    my $res = $http->get($module_info);
+    my $res = $ua->get($module_info);
     my $error;
     if ($res->{success} && !$ENV{TEST_MODULEVERSION_REQUEST_FAIL}) {
       my $release = Test::ModuleVersion::JSON::PP::decode_json $res->{content};
@@ -2628,9 +2628,8 @@ sub get_module_url {
       $error = "$module_dist-$version is unknown" unless defined $url;
     }
     else {
-      my $status = $res->{status};
-      my $reason = $res->{reason};
-      $error = "Request to metaCPAN fail($status $reason): $module_info";
+      my $status_line = "$res->{status} $res->{reason}";
+      $error = "Request to metaCPAN fail($status_line): $module_info";
     }
     ${$opts->{error}} = $error if ref $opts->{error};
   }
