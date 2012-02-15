@@ -54,6 +54,7 @@ use FindBin;
   my $tm = Test::ModuleVersion->new;
   $tm->before(<<'EOS');
 use 5.008007;
+use ___Module1 '0.05';
 
 =pod
 
@@ -64,7 +65,7 @@ You can create this script(t/module.t) by the following command.
 =cut
 
 EOS
-  $tm->lib(['extlib/lib/perl5']);
+  $tm->lib(['../extlib/lib/perl5']);
   $tm->modules([
     ['Object::Simple' => '3.0625'],
     ['Validator::Custom' => '0.1401'],

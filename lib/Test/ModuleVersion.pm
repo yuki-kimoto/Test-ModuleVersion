@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2642,7 +2642,15 @@ sub test_script {
   my ($self, %opts) = @_;
   
   # Code
-  my $code = $self->before . "\n";
+  my $code;
+
+  # Library path
+  my $libs = ref $self->lib ? $self->lib : [$self->lib];
+  $code .= "use FindBin;\n";
+  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @$libs;
+  
+  # Before
+  $code .= $self->before . "\n";
   
   # Reffer this module
   $code .= "# Created by Test::ModuleVersion $Test::ModuleVersion::VERSION\n";
@@ -2653,12 +2661,7 @@ use Test::More;
 use strict;
 use warnings;
 use ExtUtils::Installed;
-use FindBin;
 EOS
-  
-  # Library path
-  my $libs = ref $self->lib ? $self->lib : [$self->lib];
-  $code .= qq|use lib "\$FindBin::Bin/$_";\n| for @$libs;
   
   # Main
   $code .= <<'EOS';
@@ -2898,6 +2901,11 @@ if cpanm is in current directory.
   $ perl t/module.t list --fail | perl cpanm -L extlib
 
 Modules is installed into C<extlib> directory.
+
+If you want to use L<LWP::UserAgent> as HTTP client,
+you can use C<--lwp> option
+
+  $ perl module.t list --fail --lwp
 
 Have a fun to use L<Test::ModuleVersion>.
 
