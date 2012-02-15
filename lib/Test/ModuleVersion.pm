@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2607,10 +2607,10 @@ sub get_module_url {
   my $module_dist = $module;
   $module_dist = $distnames->{$module} if defined $distnames->{$module};
   $module_dist =~ s/::/-/g;
-
-  if (my $url = $privates->{$module}) {
+  
+  my $url;
+  if ($url = $privates->{$module}) {
     $url =~ s/%M/"$module_dist-$version"/e;
-    return $url;
   }
   else {
     
@@ -2619,14 +2619,23 @@ sub get_module_url {
     my $search = "release/_search?q=name:$module_dist-$version"
       . "&fields=download_url,name";
     my $http = Test::ModuleVersion::HTTP::Tiny->new;
-    my $res = $http->get("$metacpan_api/$search");
-    if ($res->{success}) {
+    my $module_info = "$metacpan_api/$search";
+    my $res = $http->get($module_info);
+    my $error;
+    if ($res->{success} && !$ENV{TEST_MODULEVERSION_REQUEST_FAIL}) {
       my $release = Test::ModuleVersion::JSON::PP::decode_json $res->{content};
-      return $release->{hits}{hits}[0]{fields}{download_url};
+      $url = $release->{hits}{hits}[0]{fields}{download_url};
+      $error = "$module_dist-$version is unknown" unless defined $url;
     }
+    else {
+      my $status = $res->{status};
+      my $reason = $res->{reason};
+      $error = "Request to metaCPAN fail($status $reason): $module_info";
+    }
+    ${$opts->{error}} = $error if ref $opts->{error};
   }
   
-  return;
+  return $url;
 }
 
 sub test_script {
@@ -2710,10 +2719,11 @@ EOS
       : [];
     for my $m (@ms) {
       my ($module, $version) = @$m;
+      my $error;
       my $url = $tm->get_module_url($module, $version,
-        {distnames => $distnames, privates => $privates});
+        {distnames => $distnames, privates => $privates, error => \$error});
       if (defined $url) { print "$url\n" }
-      else { print STDERR "$module $version is unknown\n" }
+      else { print STDERR "$error\n" }
     }  
   }
 }
@@ -3008,14 +3018,40 @@ Detect all installed module and C<modules> attribute is set.
 =head2 C<get_module_url>
 
   my $url = $tm->get_module_url($module, $version);
+  my $url = $tm->get_module_url($module, $version, $option);
 
 Get module URL by module name and version number.
-  
+
   # http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
   my $url = $tm->get_module_url('DBIx::Custom', '0.2108');
 
 You must specify version number as string, not number.
 for example, I<0.2110> is wrong, I<'0.2110'> is right.
+
+=over 2
+
+B<Option>
+
+You can set options
+
+  $tm->get_module_url($module, $version, {distnames => ..., ... => ...});
+
+=item * C<distnames>
+
+  distnames => {LWP => 'wwwlib-perl}
+
+=item * C<privates>
+
+  privates => {'Some::Module' => 'http://localhost/~kimoto/%M.tar.gz'}
+
+=item * C<error>
+
+  error => \$error
+
+You can get error message.
+
+=back
+
 
 =head2 C<test_script>
 

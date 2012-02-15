@@ -95,6 +95,12 @@ EOS
   unlike($output, qr/___NotExitst/);
   unlike($output, qr/\d\.\.\d/);
 
+  $output = `perl $file list 2>&1 >/dev/null`;
+  like($output, qr/___NotExitst-0.1 is unknown/);
+
+  $output = `export TEST_MODULEVERSION_REQUEST_FAIL=1;perl $file list 2>&1 >/dev/null`;
+  like($output, qr/Request to metaCPAN fail\(200 OK\).*___NotExitst-0.1/);
+  
   $output = `perl $file list --fail`;
   like($output, qr/http/);
   unlike($output, qr/Object-Simple/);

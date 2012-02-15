@@ -1,3 +1,5 @@
+0.10
+  - Display error messege when HTTP request to metaCPAN fail.
 0.09
   - removed "comment" attribute, and added "before" attribute
   - added "output" option to "test_script" method
