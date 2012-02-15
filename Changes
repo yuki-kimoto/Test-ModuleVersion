@@ -1,6 +1,8 @@
 0.11
   - "use lib" in test script is moved to top of script
     to load all module from the library path
+  - added "--lwp" option to test script
+    to use LWP::UserAgent as HTTP client.
 0.10
   - Display error messege when HTTP request to metaCPAN fail.
 0.09
