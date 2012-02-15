@@ -2602,7 +2602,7 @@ sub get_module_url {
   $opts ||= {};
   my $distnames = $opts->{distnames} || {};
   my $privates = $opts->{privates} || {};
-  my $lwp = $opts->{lwp};
+  my $lwp = $opts->{lwp} || 'auto';
 
   # Module
   my $module_dist = $module;
@@ -2622,7 +2622,9 @@ sub get_module_url {
     my $module_info = "$metacpan_api/$search";
     my $res = {};
     my $agent;
-    if ($lwp) {
+    if ($lwp eq 'use' || $lwp eq 'auto' && eval { require LWP::UserAgent; 1})
+    {
+      require LWP::UserAgent;
       $agent = 'LWP::UserAgent';
       my $ua = LWP::UserAgent->new(
         parse_head => 0,
@@ -2690,13 +2692,19 @@ EOS
 
 sub main {
   my $command = shift;
-  my $option = shift;
+  my @options = @_;
   
   die qq/command "$command" is unkonwn command/
     if defined $command && $command ne 'list';
   
-  die qq/list $option is unknown option/
-    if defined $option && $option ne '--fail';
+  my $list_failed;
+  my $lwp = 'auto';
+  for my $option (@options) {
+    if ($option eq '--fail') { $list_failed = 1 }
+    elsif ($option eq '--lwp') { $lwp = 'use' }
+    elsif ($option eq '--no-lwp') { $lwp = 'no' }
+    else { die qq/list $option is unknown option/ }
+  }
   
   if (defined $command) {
     my $builder = Test::More->builder;
@@ -2739,14 +2747,14 @@ EOS
     my $privates = <%%%%%% privates %%%%%%>
     ;
     my $tm = Test::ModuleVersion->new;
-    my @ms = $command eq 'list' && ($option || '') eq '--fail' ? @$failed
+    my @ms = $command eq 'list' && $list_failed ? @$failed
       : $command eq 'list' ? @$modules
       : [];
     for my $m (@ms) {
       my ($module, $version) = @$m;
       my $error;
       my $url = $tm->get_module_url($module, $version,
-        {distnames => $distnames, privates => $privates, error => \$error});
+        {distnames => $distnames, privates => $privates, error => \$error, lwp => $lwp});
       if (defined $url) { print "$url\n" }
       else { print STDERR "$error\n" }
     }  
@@ -2924,10 +2932,15 @@ if cpanm is in current directory.
 
 Modules is installed into C<extlib> directory.
 
-If you want to use L<LWP::UserAgent> as HTTP client,
-you can use C<--lwp> option
+If L<LWP::UserAgent> is available, test script use LWP::UserAgent
+for HTTP request.
+If L<LWP::UserAgent> is not available, test script use L<HTTP::Tiny>.
 
-  $ perl module.t list --fail --lwp
+If you don't use L<LWP::UserAgent>, use C<--no-lwp> option.
+
+  $ perl module.t list --no-lwp
+
+If you force L<LWP::UserAgetn>, use C<--lwp> option.
 
 Have a fun to use L<Test::ModuleVersion>.
 
@@ -3079,6 +3092,14 @@ You can set options
   error => \$error
 
 You can get error message.
+
+=item * C<lwp>
+
+  lwp => 'use'
+  lwp => 'no'
+  lwp => 'auto'
+
+use L<LWP::UserAgent> or not or automatically use
 
 =back
 

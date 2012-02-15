@@ -4,9 +4,13 @@ use warnings;
 use Test::ModuleVersion;
 use FindBin;
 
+my $lwp_exists = eval { require LWP::UserAgent; 1};
+die "LWP::UserAgent must not be installed!" if $lwp_exists;
+
 {
   # privates
   my $tm = Test::ModuleVersion->new;
+  $tm->lib(['../extlib/lib/perl5']);
   $tm->privates({
     'Some::Module' => 'http://localhost/~kimoto/%M.tar.gz'
   });
@@ -21,6 +25,10 @@ use FindBin;
   
   $| = 1;
   print $fh $tm->test_script;
+  $output = `perl $file list --no-lwp`;
+  like($output, qr#http://localhost/~kimoto/Some-Module-0.01.tar.gz#);
+  $output = `perl $file list --lwp`;
+  like($output, qr#http://localhost/~kimoto/Some-Module-0.01.tar.gz#);
   $output = `perl $file list`;
   like($output, qr#http://localhost/~kimoto/Some-Module-0.01.tar.gz#);
 }
@@ -45,7 +53,7 @@ use FindBin;
   
   $| = 1;
   print $fh $tm->test_script;
-  $output = `perl $file list`;
+  $output = `perl $file list --no-lwp`;
   like($output, qr#http://localhost/~kimoto/somemod-0.01.tar.gz#);
 }
 
@@ -89,25 +97,42 @@ EOS
   like($output, qr/not ok 5/);
   like($output, qr/not ok 6/);
 
-  $output = `perl $file list`;
+  $output = `perl $file list --no-lwp`;
   like($output, qr/http/);
   like($output, qr/Object-Simple-3.0625/);
   like($output, qr/Validator-Custom-0.1401/);
   unlike($output, qr/___NotExitst/);
   unlike($output, qr/\d\.\.\d/);
 
-  $output = `perl $file list 2>&1 >/dev/null`;
+  $output = `perl $file list --no-lwp 2>&1 >/dev/null`;
   like($output, qr/___NotExitst-0.1 is unknown/);
 
-  $output = `export TEST_MODULEVERSION_REQUEST_FAIL=1;perl $file list 2>&1 >/dev/null`;
+  $output = `export TEST_MODULEVERSION_REQUEST_FAIL=1;perl $file list --no-lwp 2>&1 >/dev/null`;
   like($output, qr/Request to metaCPAN fail\(200 OK\).*___NotExitst-0.1/);
   like($output, qr/HTTP::Tiny/);
+  $output = `export TEST_MODULEVERSION_REQUEST_FAIL=1;perl $file list --lwp 2>&1 >/dev/null`;
+  like($output, qr/Request to metaCPAN fail\(200 OK\).*___NotExitst-0.1/);
+  like($output, qr/LWP::UserAgent/);
+  $output = `export TEST_MODULEVERSION_REQUEST_FAIL=1;perl $file list 2>&1 >/dev/null`;
+  like($output, qr/Request to metaCPAN fail\(200 OK\).*___NotExitst-0.1/);
+  like($output, qr/LWP::UserAgent/);
   
-  $output = `perl $file list --fail`;
+  $output = `perl $file list --no-lwp --fail`;
   like($output, qr/http/);
   unlike($output, qr/Object-Simple/);
   like($output, qr/Validator-Custom-0.1401/);
   unlike($output, qr/___NotExitst/);
+  
+  # HTTP::Tiny use if LWP is not exists
+  open $fh, '>', $file
+    or die qr/Can't open file "$file": $!/;
+  $tm->before('');
+  $tm->lib([]);
+  print $fh $tm->test_script;
+  close $fh;
+  $output = `export TEST_MODULEVERSION_REQUEST_FAIL=1;perl $file list 2>&1 >/dev/null`;
+  like($output, qr/Request to metaCPAN fail\(200 OK\).*___NotExitst-0.1/);
+  like($output, qr/HTTP::Tiny/);
 }
 
 {
@@ -158,7 +183,7 @@ EOS
   $| = 1;
   $tm->test_script(output => $file);
   
-  my $output = `perl $file list`;
+  my $output = `perl $file list --no-lwp`;
   like($output, qr/libwww-perl-6.03/);
   like($output, qr/IO-Compress-2.048/);
   like($output, qr/PathTools-3.33.*PathTools-3.33/ms);
