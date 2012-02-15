@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2622,7 +2622,7 @@ sub get_module_url {
     my $module_info = "$metacpan_api/$search";
     my $res = {};
     my $agent;
-    if ($lwp eq 'use' || $lwp eq 'auto' && eval { require LWP::UserAgent; 1})
+    if ($lwp eq 'use' || $lwp eq 'auto' && eval { require LWP::UserAgent; LWP::UserAgent->VERSION(5.802) })
     {
       require LWP::UserAgent;
       $agent = 'LWP::UserAgent';
@@ -2932,7 +2932,7 @@ if cpanm is in current directory.
 
 Modules is installed into C<extlib> directory.
 
-If L<LWP::UserAgent> is available, test script use LWP::UserAgent
+If L<LWP::UserAgent> is available and version is 5.802+, test script use LWP::UserAgent
 for HTTP request.
 If L<LWP::UserAgent> is not available, test script use L<HTTP::Tiny>.
 
