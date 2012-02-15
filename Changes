@@ -1,4 +1,5 @@
 0.09
+  - removed "comment" attribute, and added "before" attribute
   - added "output" option to "test_script" method
 0.08
   - removed "list_fail" command, and added "list --fail" option

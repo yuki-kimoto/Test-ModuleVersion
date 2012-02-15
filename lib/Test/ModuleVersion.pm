@@ -2576,7 +2576,7 @@ use Carp 'croak';
 use Data::Dumper;
 
 sub has { __PACKAGE__->Test::ModuleVersion::Object::Simple::attr(@_) }
-has comment => '';
+has before => '';
 has distnames => sub { {} };
 has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
 has ignore => sub { [] };
@@ -2633,18 +2633,7 @@ sub test_script {
   my ($self, %opts) = @_;
   
   # Code
-  my $code;
-  
-  # Comment
-  my $comment = $self->comment;
-  $code .= <<"EOS" if $comment;
-=pod
-
-$comment
-
-=cut
-
-EOS
+  my $code = $self->before . "\n";
   
   # Reffer this module
   $code .= "# Created by Test::ModuleVersion $Test::ModuleVersion::VERSION\n";
@@ -2904,19 +2893,24 @@ Have a fun to use L<Test::ModuleVersion>.
 
 =head1 ATTRIBUTES
 
-=head2 C<comment>
+=head2 C<before>
 
-  my $comment = $self->comment;
-  $tm = $tm->comment($comment);
+  my $code = $self->before;
+  $tm = $tm->before($code);
 
-Comment
+You can add some code before test script.
 
-You can embbed comment into test script.
+  $tm->before(<<'EOS');
+  use 5.008007;
+  
+  =pod
+  
+  You can create this script(t/module.t) by the following command.
 
-  $tm->comment(<<'EOS');
-  You can create this test script by the following command.
-
-    perl mvt.pl > t/module.t
+    perl mvt.pl
+  
+  =cut
+  
   EOS
 
 =head2 C<distnames>

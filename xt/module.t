@@ -52,10 +52,17 @@ use FindBin;
 {
   # Basci test
   my $tm = Test::ModuleVersion->new;
-  $tm->comment(<<'EOS');
-You can this test script by the following command
+  $tm->before(<<'EOS');
+use 5.008007;
 
-  perl mvt.pl > t/module.t
+=pod
+
+You can create this script(t/module.t) by the following command.
+
+  perl mvt.pl
+
+=cut
+
 EOS
   $tm->lib(['extlib/lib/perl5']);
   $tm->modules([
@@ -63,16 +70,16 @@ EOS
     ['Validator::Custom' => '0.1401'],
     ['___NotExitst' => '0.1'],
   ]);
+  like($tm->test_script, qr/use 5.008007/);
+  like($tm->test_script, qr#\Qperl mvt.pl#);
+  
   my $file = "$FindBin::Bin/output/module.t.output";
   open my $fh, '>', $file
     or die qr/Can't open file "$file": $!/;
-  like($tm->test_script, qr#\Qperl mvt.pl > t/module.t#);
-  
-  my $output;
-  
-  $| = 1;
   print $fh $tm->test_script;
-  $output = `perl $file`;
+  close $fh;
+  
+  my $output = `perl $file`;
   like($output, qr/1\.\.6/);
   like($output, qr/ok 1/);
   like($output, qr/ok 2/);
@@ -107,12 +114,10 @@ EOS
   my $file = "$FindBin::Bin/output/module.t.output";
   open my $fh, '>', $file
     or die qr/Can't open file "$file": $!/;
-  
-  my $output;
-  
-  $| = 1;
   print $fh $tm->test_script;
-  $output = `perl $file`;
+  close $fh;
+  
+  my $output = `perl $file`;
   like($output, qr/1\.\.6/);
   like($output, qr/ok 1/);
   like($output, qr/ok 2/);
