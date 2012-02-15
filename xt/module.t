@@ -101,6 +101,7 @@ EOS
 
   $output = `export TEST_MODULEVERSION_REQUEST_FAIL=1;perl $file list 2>&1 >/dev/null`;
   like($output, qr/Request to metaCPAN fail\(200 OK\).*___NotExitst-0.1/);
+  like($output, qr/HTTP::Tiny/);
   
   $output = `perl $file list --fail`;
   like($output, qr/http/);
