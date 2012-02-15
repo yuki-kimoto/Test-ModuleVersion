@@ -142,14 +142,10 @@ EOS
     ['Scalar::Util' => '1.23'],
   ]);
   my $file = "$FindBin::Bin/output/module.t.output";
-  open my $fh, '>', $file
-    or die qr/Can't open file "$file": $!/;
-  
-  my $output;
-  
   $| = 1;
-  print $fh $tm->test_script;
-  $output = `perl $file list`;
+  $tm->test_script(output => $file);
+  
+  my $output = `perl $file list`;
   like($output, qr/libwww-perl-6.03/);
   like($output, qr/IO-Compress-2.048/);
   like($output, qr/PathTools-3.33.*PathTools-3.33/ms);

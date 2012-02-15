@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2630,7 +2630,7 @@ sub get_module_url {
 }
 
 sub test_script {
-  my $self = shift;
+  my ($self, %opts) = @_;
   
   # Code
   my $code;
@@ -2749,6 +2749,11 @@ EOS
   my $privates_code = Data::Dumper->new([$self->privates])->Terse(1)->Indent(2)->Dump;
   $code =~ s/<%%%%%% privates %%%%%%>/$privates_code/e;
   
+  if (my $file = $opts{output}) {
+    open my $fh, '>', $file
+      or die qq/Can't open file "$file": $!/;
+    print $fh $code;
+  }
   return $code;
 }
 
@@ -2870,12 +2875,12 @@ It is very useful because you can know the module differnce.
 
 =head2 Get module URLs
 
-If test fail, you install the module manually, it is very hard work.
-you can get lacking module URLs by C<list_fail> command.
+If test fail, you usually install the module manually, it is very hard work.
+you can get module URLs by C<list> command.
 
-  $ perl module.t list_fail
+  $ perl module.t list
 
-The output is the following-like one.
+URLs of all module in test sciprt is printed.
 
   http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
   ...
@@ -2884,13 +2889,16 @@ Internally, metaCPAN api is used to get module URL.
 if you have proxy server,
 you can set $ENV{http_proxy}.
 
-Installation using C<cpanm> is very easy.
+You can also get test failed module URL by C<--fail> option.
 
-  $ perl module.t list_fail | cpanm
+  $ perl module.t list --fail
 
-You can also print all modules in test by C<list> command.
+Module installation using L<cpanm> is very easy
+if cpanm is in current directory.
 
-  $ perl module.t list
+  $ perl t/module.t list --fail | perl cpanm -L extlib
+
+Modules is installed into C<extlib> directory.
 
 Have a fun to use L<Test::ModuleVersion>.
 
