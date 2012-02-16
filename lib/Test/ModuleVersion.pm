@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2567,42 +2567,25 @@ sub incr_reset {
     $self->{incr_parsing} = 0;
 }
 
-package Test::ModuleVersion;
+package
+  Test::ModuleVersion::ModuleURL;
 our @ISA = ('Test::ModuleVersion::Object::Simple');
 use strict;
 use warnings;
-use ExtUtils::Installed;
-use Carp 'croak';
-use Data::Dumper;
-
 sub has { __PACKAGE__->Test::ModuleVersion::Object::Simple::attr(@_) }
-has before => '';
+
 has distnames => sub { {} };
-has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
-has ignore => sub { [] };
-has lib => sub { [] };
-has modules => sub { [] };
 has privates => sub { {} };
+has 'error';
+has lwp => 'auto';
 
-sub detect {
-  my $self = shift;
-  
-  # Detect installed modules
-  my $ei = ExtUtils::Installed->new;
-  my $modules = [];
-  push @$modules, [$_ => $ei->version($_)] for sort $ei->modules;
-  $self->modules($modules);
-  
-  return $self;
-}
-
-sub get_module_url {
+sub get {
   my ($self, $module, $version, $opts) = @_;
   
   $opts ||= {};
-  my $distnames = $opts->{distnames} || {};
-  my $privates = $opts->{privates} || {};
-  my $lwp = $opts->{lwp} || 'auto';
+  my $distnames = $self->distnames;
+  my $privates = $self->privates;
+  my $lwp = $self->lwp;
 
   # Module
   my $module_dist = $module;
@@ -2656,10 +2639,40 @@ sub get_module_url {
     else {
       $error = "Request to metaCPAN fail($res->{status_line}):$agent:$module_info";
     }
-    ${$opts->{error}} = $error if ref $opts->{error};
+    $self->error($error);
   }
   
   return $url;
+}
+
+
+package Test::ModuleVersion;
+our @ISA = ('Test::ModuleVersion::Object::Simple');
+use strict;
+use warnings;
+use ExtUtils::Installed;
+use Carp 'croak';
+use Data::Dumper;
+
+sub has { __PACKAGE__->Test::ModuleVersion::Object::Simple::attr(@_) }
+has before => '';
+has distnames => sub { {} };
+has default_ignore => sub { ['Perl', 'Test::ModuleVersion'] };
+has ignore => sub { [] };
+has lib => sub { [] };
+has modules => sub { [] };
+has privates => sub { {} };
+
+sub detect {
+  my $self = shift;
+  
+  # Detect installed modules
+  my $ei = ExtUtils::Installed->new;
+  my $modules = [];
+  push @$modules, [$_ => $ei->version($_)] for sort $ei->modules;
+  $self->modules($modules);
+  
+  return $self;
 }
 
 sub test_script {
@@ -2752,11 +2765,13 @@ EOS
       : [];
     for my $m (@ms) {
       my ($module, $version) = @$m;
-      my $error;
-      my $url = $tm->get_module_url($module, $version,
-        {distnames => $distnames, privates => $privates, error => \$error, lwp => $lwp});
+      my $mu = Test::ModuleVersion::ModuleURL->new;
+      $mu->distnames($distnames);
+      $mu->privates($privates);
+      $mu->lwp($lwp);
+      my $url = $mu->get($module, $version);
       if (defined $url) { print "$url\n" }
-      else { print STDERR "$error\n" }
+      else { print STDERR $mu->error . "\n" }
     }  
   }
 }
@@ -3057,52 +3072,6 @@ You also use this attribute with C<distnames> attribute.
   $tm->detect;
 
 Detect all installed module and C<modules> attribute is set.
-
-=head2 C<get_module_url>
-
-  my $url = $tm->get_module_url($module, $version);
-  my $url = $tm->get_module_url($module, $version, $option);
-
-Get module URL by module name and version number.
-
-  # http://cpan.metacpan.org/authors/id/K/KI/KIMOTO/DBIx-Custom-0.2108.tar.gz
-  my $url = $tm->get_module_url('DBIx::Custom', '0.2108');
-
-You must specify version number as string, not number.
-for example, I<0.2110> is wrong, I<'0.2110'> is right.
-
-=over 2
-
-B<Option>
-
-You can set options
-
-  $tm->get_module_url($module, $version, {distnames => ..., ... => ...});
-
-=item * C<distnames>
-
-  distnames => {LWP => 'wwwlib-perl}
-
-=item * C<privates>
-
-  privates => {'Some::Module' => 'http://localhost/~kimoto/%M.tar.gz'}
-
-=item * C<error>
-
-  error => \$error
-
-You can get error message.
-
-=item * C<lwp>
-
-  lwp => 'use'
-  lwp => 'no'
-  lwp => 'auto'
-
-use L<LWP::UserAgent> or not or automatically use
-
-=back
-
 
 =head2 C<test_script>
 
