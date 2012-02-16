@@ -2959,17 +2959,36 @@ L<HTTP::Tiny> don't support proxy authentication.
 
 =head1 EXAMPELS
 
-=head2 Basic
+=head2 Basic1
+
+  # Directory
+  t / mvt.pl
+    / module.t
+  
+  extlib / lib / perl5 / Object / Simple.pm
+                       / Validator / Custom.pm
+
+features:
+
+=over 2
+
+=item 1. Module is installed in C<extlib/lib/perl5>
+
+=item 2. Perl 5.008007+ is required
+
+=item 3. Object::Simple 3.625, Validator::Custom 0.1401
+
+=back
 
   use Test::ModuleVersion;
   my $tm = Test::ModuleVersion->new;
-  $tm->lib(
+  $tm->lib('../extlib/lib/perl5');
   $tm->before(<<'EOS');
   use 5.008007;
   
   =pod
 
-  run mvt.pl to create module version test(t/module.t).
+  run mvt.pl to create this module version test(t/module.t).
 
     perl mvt.pl
   
@@ -2979,8 +2998,71 @@ L<HTTP::Tiny> don't support proxy authentication.
     ['Object::Simple' => '3.0625'],
     ['Validator::Custom' => '0.1401']
   ]);
+  $tm->test_script(output => 't/module.t');
+
+=head2 Basic2
+
+  # Directory
+  t / mvt.pl
+    / module.t
   
+  extlib / lib / perl5 / LWP.pm
+
+features:
+
+=over 2
+
+=item 1. LWP 6.03
+
+LWP module distribution name is C<libwww-perl>.
+If module name is different from distribution name,
+you can use C<distnames> attribute.
+
+=back
+
+  use Test::ModuleVersion;
+  my $tm = Test::ModuleVersion->new;
+  $tm->lib('../extlib/lib/perl5');
+  $tm->distnames({
+    'LWP' => 'libwww-perl',
+  });
+  $tm->modules([
+    ['LWP' => '6.03'],
+  ]);
+  $tm->test_script(output => 't/module.t');
   
+=head2 Basic3
+
+  # Directory
+  t / mvt.pl
+    / module.t
+  
+  extlib / lib / perl5 / SomeModule.pm
+
+features:
+
+=over 2
+
+=item 1. SomeModule 0.03 don't exist in CPAN
+
+=item 2. SomeModule exist in http://myhost/SomeModule-0.03.tar.gz
+
+SomeModule is private module.
+If module exist in some URL,
+you can use C<privates> attribute.
+
+=back
+
+  use Test::ModuleVersion;
+  my $tm = Test::ModuleVersion->new;
+  $tm->lib('../extlib/lib/perl5');
+  $tm->privates({
+    'SomeModule' => 'http://myhost/%M.tar.gz',
+  });
+  $tm->modules([
+    ['SomeModule' => '0.03'],
+  ]);
+  $tm->test_script(output => 't/module.t');
 
 =head1 ATTRIBUTES
 
@@ -3018,55 +3100,46 @@ You can add some code before version test.
   });
 
 Module distribution name corresponding to module name.
-Some module is not same distribution name as module name,
-like LWP module.
+Some module have different distribution name.
+For example, L<LWP> module distribution name is C<libwww-perl>.
 
-LWP is module name, but distribution name is C<libwww-perl>.
-If right distribution name is unknown, L<Test::ModuleVersion>
-can't get module URL, so you must set C<distnames> attribute
-when distribution name is not same as module name.
+you must set C<distnames> attribute to get module URL.
 
 =head2 C<lib>
 
   my $lib = $self->lib;
-  $tm = $tm->lib('extlib/lib/perl5');
-  $tm = $tm->lib(['extlib/lib/perl5', ...]);
+  $tm = $tm->lib('../extlib/lib/perl5');
+  $tm = $tm->lib(['../extlib/lib/perl5', ...]);
 
-Module including pass from script directory.
-The following code is added to test script.
+Module including pass from version test directory.
+C<use lib> is added to version test.
 
-  use lib "$FindBin::Bin/extlib/lib/perl5";
-
-If the module is installed in this directory,
-module version test is success.
+  use lib "$FindBin::Bin/../extlib/lib/perl5";
 
 =head2 C<modules>
 
   my $modules = $tm->modules;
   $tm = $tm->modules($modules);
 
-List of Module name and version.
+Pairs of module and version.
 
   $tm->modules([
     ['DBIx::Custom' => '0.2108'],
     ['Validator::Custom' => '0.1426']
   ]);
 
-Version must be string like C<'0.1426'>, not C<0.1426>.
+Note that version must be string(C<'0.1426'>), not number(C<0.1426>).
 
 =head2 C<privates>
 
   my $privates = $tm->privates;
   $tm = $tm->privates({
-    'Some::Module' => 'http://localhost/~kimoto/%M.tar.gz'
+    'SomeModule' => 'http://localhost/~kimoto/%M.tar.gz'
   });
 
-Private repogitory URL. If you use C<privates> attribute,
-you don't need upload module to C<CPAN>.
-You upload module to some place you can access by C<http> protocal.
-
-C<%M> is replaces module name and version number, like Some-Module-0.01.
-You also use this attribute with C<distnames> attribute.
+Private module URLs.
+you can get module URL if the module don't exist in CPAN.
+C<%M> is replaced by C<module-version> like C<SomeModule-0.01>.
 
 =head1 METHODS
 
@@ -3075,15 +3148,18 @@ You also use this attribute with C<distnames> attribute.
   my $modules = $tm->detect;
   my $modules = $tm->detect(ignore => ['Perl', 'Test::ModuleVersion']);
 
-Detect all installed module.
+Get all installed module.
 If you set C<ignore> option, the module is ignored.
+
+Note that L<ExtUtils::Installed> is used internally.
+This information will be not accurate in some cases.
 
 =head2 C<test_script>
 
   my $test_script = $tm->test_script;
   $tm->test_script(output => 't/module.t');
 
-Return version check test.
+Return version test as string.
 If C<output> option is set, test is output to the file.
 
 =head1 AUTHOR
