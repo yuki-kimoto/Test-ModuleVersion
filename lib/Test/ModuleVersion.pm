@@ -2887,7 +2887,7 @@ test fail.
   ok 1 - require DBIx::Custom;
   not ok 2 - DBIx::Custom version: 0.2108
   #   Failed test 'DBIx::Custom version: 0.2108'
-  #   at module.t.pl line 13.
+  #   at t/module.t.pl line 13.
   #          got: '0.2106'
   #     expected: '0.2108'
 
@@ -2907,7 +2907,7 @@ All module URLs in version test is output to C<STDOUT>.
 
 You can list only test failed module URLs by C<--fail> option
 
-  $ perl module.t list --fail
+  $ perl t/module.t list --fail
 
 =head1 Advanced
 
@@ -2918,44 +2918,69 @@ You can list only test failed module URLs by C<--fail> option
 Module installation is very easy. Test failed module
 is installed into C<extlib> directory by L<cpanm>.
 
-=head2 User Agent
+=head2 HTTP client
 
-L<Test::Module> version switch two User Agent as necessary.
+L<Test::Module> version switch two HTTP client as necessary.
 
 =over 2
 
-=item LWP::UserAgent
+=item 1. LWP::UserAgent
 
-=item HTTP::Tiny
+=item 2. HTTP::Tiny
 
 =back
 
 These module is used to get module URLs from metaCPAN.
 
 If L<LWP::UserAgent> 5.802+ is installed, L<LWP::UserAgent>
-is used. If not, L<HTTP::Tiny> is used.
+is seleced. If not, L<HTTP::Tiny> is selected.
 
-If you force L<LWP::UserAgetn>, use C<--lwp> option.
+C<--lwp> option force L<LWP::UserAgent>.
 
-  $ perl module.t list --lwp
+  $ perl t/module.t list --lwp
 
-If you force L<HTTP::Tiny>, use C<--no-lwp> option.
+C<--no-lwp> option force L<HTTP::Tiny>.
 
-  $ perl module.t list --no-lwp
+  $ perl t/module.t list --no-lwp
 
 =head2 HTTP proxy
 
   export http_proxy=http://hostname:3001
 
-If you want to use proxy server, use C<http_proxy> environment variable.
+C<http_proxy> environment variable enable you to use proxy server.
 
 =head2 HTTP proxy authentication
 
   export http_proxy=http://username:password@hostname:3001
 
-If you want to use proxy authentication, L<LWP::UserAgent> 5.802+
-must be installed.
+If L<LWP::UserAgent> 5.802+ is installed,
+proxy authentication is available.
 L<HTTP::Tiny> don't support proxy authentication.
+
+=head1 EXAMPELS
+
+=head2 Basic
+
+  use Test::ModuleVersion;
+  my $tm = Test::ModuleVersion->new;
+  $tm->lib(
+  $tm->before(<<'EOS');
+  use 5.008007;
+  
+  =pod
+
+  run mvt.pl to create module version test(t/module.t).
+
+    perl mvt.pl
+  
+  =cut
+  EOS
+  $tm->modules([
+    ['Object::Simple' => '3.0625'],
+    ['Validator::Custom' => '0.1401']
+  ]);
+  
+  
 
 =head1 ATTRIBUTES
 

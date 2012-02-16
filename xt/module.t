@@ -138,7 +138,7 @@ EOS
 {
   # string lib
   my $tm = Test::ModuleVersion->new;
-  $tm->lib('extlib/lib/perl5');
+  $tm->lib('../extlib/lib/perl5');
   $tm->modules([
     ['Object::Simple' => '3.0625'],
     ['Validator::Custom' => '0.1401'],
