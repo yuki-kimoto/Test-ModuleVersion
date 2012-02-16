@@ -2932,40 +2932,30 @@ L<Test::Module> version switch two User Agent as necessary.
 
 These module is used to get module URLs from metaCPAN.
 
-
-
-
-=head2 Using HTTP proxy
-
-
-
-you can set $ENV{http_proxy}.
-
-  export http_proxy=http://hostname:3001
-
-Note that C<HTTP::Tiny> don't support proxy authentication.
-If you want to use proxy authentication, L<LWP::UserAgent> 5.802+
-must be installed.
-
-  export http_proxy=http://username:password@hostname:3001
-
-user name and password contains not available string in URL.
-the string must be URL encoded.
-
-  export http_proxy=http://kimoto%40gmail.com:xituei@hostname:3001
-
-
-If L<LWP::UserAgent> is available and version is 5.802+, test script use LWP::UserAgent
-for HTTP request.
-If L<LWP::UserAgent> is not available, test script use L<HTTP::Tiny>.
-
-If you don't use L<LWP::UserAgent>, use C<--no-lwp> option.
-
-  $ perl module.t list --no-lwp
+If L<LWP::UserAgent> 5.802+ is installed, L<LWP::UserAgent>
+is used. If not, L<HTTP::Tiny> is used.
 
 If you force L<LWP::UserAgetn>, use C<--lwp> option.
 
-Have a fun to use L<Test::ModuleVersion>.
+  $ perl module.t list --lwp
+
+If you force L<HTTP::Tiny>, use C<--no-lwp> option.
+
+  $ perl module.t list --no-lwp
+
+=head2 HTTP proxy
+
+  export http_proxy=http://hostname:3001
+
+If you want to use proxy server, use C<http_proxy> environment variable.
+
+=head2 HTTP proxy authentication
+
+  export http_proxy=http://username:password@hostname:3001
+
+If you want to use proxy authentication, L<LWP::UserAgent> 5.802+
+must be installed.
+L<HTTP::Tiny> don't support proxy authentication.
 
 =head1 ATTRIBUTES
 
@@ -2974,7 +2964,7 @@ Have a fun to use L<Test::ModuleVersion>.
   my $code = $self->before;
   $tm = $tm->before($code);
 
-You can add some code before test script.
+You can add some code before version test.
 
   $tm->before(<<'EOS');
   use 5.008007;
@@ -3037,9 +3027,7 @@ List of Module name and version.
     ['Validator::Custom' => '0.1426']
   ]);
 
-Version number must be string like C<'0.1426'>, not C<0.1426>.
-
-If C<detect> method is executed, C<modules> attribute is set automatically.
+Version must be string like C<'0.1426'>, not C<0.1426>.
 
 =head2 C<privates>
 
