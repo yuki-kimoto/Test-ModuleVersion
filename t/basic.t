@@ -12,7 +12,6 @@ sub normalize {
 
 {
   my $tm = Test::ModuleVersion->new;
-  $tm->ignore([qw/TimeDate Perl Mail/]);
   $tm->detect;
   ok($tm->test_script);
 }

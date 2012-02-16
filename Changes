@@ -1,5 +1,7 @@
 0.13
   - removed get_module_url method, and added Test::ModuleVersion::ModuleURL module
+  - detect method return modules instead of setting modules attribute
+  - ignore attribute is removed, and added ignore option to detect method
 0.12
   - LWP::UserAgent is available if the version is 5.802+.
 0.11

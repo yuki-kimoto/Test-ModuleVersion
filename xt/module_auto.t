@@ -6,8 +6,8 @@ use FindBin;
 
 {
   my $tm = Test::ModuleVersion->new;
-  $tm->detect;
-  $tm->ignore([qw/Object::Simple TimeDate Mail LWP/]);
+  my $modules = $tm->detect(ignore => [qw/Perl Test::ModuleVersion Object::Simple TimeDate Mail LWP/]);
+  $tm->modules($modules);
   my $file = "$FindBin::Bin/output/module_auto.t.output";
   open my $fh, '>', $file
     or die qr/Can't open file "$file": $!/;
