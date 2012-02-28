@@ -1,3 +1,17 @@
+0.14
+  - EXPERIMENTAL flag is removed from this module
+  - added BACKWARDS COMPATIBILITY POLICY
+    ---------------------------------
+    If a functionality is DEPRECATED, you can know it by DEPRECATED warnings
+    except for attribute method.
+    You can check all DEPRECATED functionalities by document.
+    DEPRECATED functionality is removed after five years,
+    but if at least one person use the functionality and tell me that thing
+    I extend one year each time he tell me it.
+
+    EXPERIMENTAL functionality will be changed without warnings.
+    -------------------
+  - improved detect method detection
 0.13
   - removed get_module_url method, and added Test::ModuleVersion::ModuleURL module
   - detect method return modules instead of setting modules attribute

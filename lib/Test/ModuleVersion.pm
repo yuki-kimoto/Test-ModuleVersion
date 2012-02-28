@@ -1,6 +1,6 @@
 use 5.008007;
 package Test::ModuleVersion;
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 package
   Test::ModuleVersion::Object::Simple;
@@ -2671,7 +2671,8 @@ sub detect {
   my @modules;
   for my $module (sort $ei->modules) {
     next if grep { $module eq $_ } @$ignore;
-    push @modules, [$module => $ei->version($module)];
+    my $version = $ei->version($module);
+    push @modules, [$module => $version] if length $version;
   }
 
   return \@modules;
@@ -2826,7 +2827,7 @@ sub _source {
 
 =head1 NAME
 
-Test::ModuleVersion - Module version test generator (EXPERIMENTAL)
+Test::ModuleVersion - Module version test generator
 
 =head1 SYNOPSIS
 
@@ -2981,6 +2982,7 @@ features:
 =back
 
   use Test::ModuleVersion;
+  use FindBin;
   my $tm = Test::ModuleVersion->new;
   $tm->lib('../extlib/lib/perl5');
   $tm->before(<<'EOS');
@@ -2998,7 +3000,7 @@ features:
     ['Object::Simple' => '3.0625'],
     ['Validator::Custom' => '0.1401']
   ]);
-  $tm->test_script(output => 't/module.t');
+  $tm->test_script(output => "$FindBin::Bin/t/module.t");
 
 =head2 Basic2
 
@@ -3021,6 +3023,7 @@ you can use C<distnames> attribute.
 =back
 
   use Test::ModuleVersion;
+  use FindBin;
   my $tm = Test::ModuleVersion->new;
   $tm->lib('../extlib/lib/perl5');
   $tm->distnames({
@@ -3029,7 +3032,7 @@ you can use C<distnames> attribute.
   $tm->modules([
     ['LWP' => '6.03'],
   ]);
-  $tm->test_script(output => 't/module.t');
+  $tm->test_script(output => "$FindBin::Bin/t/module.t");
   
 =head2 Basic3
 
@@ -3054,6 +3057,7 @@ you can use C<privates> attribute.
 =back
 
   use Test::ModuleVersion;
+  use FindBin;
   my $tm = Test::ModuleVersion->new;
   $tm->lib('../extlib/lib/perl5');
   $tm->privates({
@@ -3062,7 +3066,7 @@ you can use C<privates> attribute.
   $tm->modules([
     ['SomeModule' => '0.03'],
   ]);
-  $tm->test_script(output => 't/module.t');
+  $tm->test_script(output => "$FindBin::Bin/t/module.t");
 
 =head1 ATTRIBUTES
 
@@ -3161,6 +3165,17 @@ This information will be not accurate in some cases.
 
 Return version test as string.
 If C<output> option is set, test is output to the file.
+
+=head1 BACKWARDS COMPATIBILITY POLICY
+
+If a functionality is DEPRECATED, you can know it by DEPRECATED warnings
+except for attribute method.
+You can check all DEPRECATED functionalities by document.
+DEPRECATED functionality is removed after five years,
+but if at least one person use the functionality and tell me that thing
+I extend one year each time he tell me it.
+
+EXPERIMENTAL functionality will be changed without warnings.
 
 =head1 AUTHOR
 
