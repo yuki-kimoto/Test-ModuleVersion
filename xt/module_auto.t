@@ -3,9 +3,11 @@ use strict;
 use warnings;
 use Test::ModuleVersion;
 use FindBin;
+use lib "$FindBin::Bin/extlib/lib/perl5";
 
 {
   my $tm = Test::ModuleVersion->new;
+  $tm->lib('../extlib/lib/perl5');
   my $modules = $tm->detect(ignore => [qw/Perl Test::ModuleVersion Object::Simple TimeDate Mail LWP/]);
   $tm->modules($modules);
   my $file = "$FindBin::Bin/output/module_auto.t.output";
