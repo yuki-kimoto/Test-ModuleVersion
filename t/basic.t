@@ -3,18 +3,6 @@ use strict;
 use warnings;
 use Test::ModuleVersion;
 
-sub normalize {
-  my $string = shift;
-  $string =~ s/\x0D\x0A|\x0D|\x0A/\n/g;
-  $string = quotemeta $string;
-  return $string;
-}
-
-{
-  my $tm = Test::ModuleVersion->new;
-  $tm->detect;
-  ok($tm->test_script);
-}
 {
   my $tm = Test::ModuleVersion->new;
   $tm->modules([
@@ -30,7 +18,9 @@ sub normalize {
     ['DBIx::Custom' => '0.2107'],
     ['Validator::Custom' => '0.1426']
   ]);
-  my $test_script = $tm->test_script;
+  like($tm->test_script, qr/Object::Simple.*3.0624/);
+  like($tm->test_script, qr/DBIx::Custom.*0.2107/);
+  like($tm->test_script, qr/Validator::Custom.*0.1426/);
 }
 
 1;

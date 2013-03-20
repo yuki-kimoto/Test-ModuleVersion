@@ -2,6 +2,17 @@ NAME
 
   Test::ModuleVersion - Module Version Test Generator
 
+CAUTION
+
+  Sorry. This module is DEPRECATED because L<cpanm> and L<cpanfile> is much better.
+  If you want to install moudles, use L<cpanm> and L<cpanfile> instead.
+  See L<https://github.com/kraih/mojo/wiki/Installation-of-cpan-modules-by-cpanm-and-cpanfile>
+  If you want to test module version, you write test by yourself.
+
+    is($DBIx::Custom::VERSION, '0.2108');
+
+  This module will be removed from CPAN on 2018/3/1
+    
 INSTALLATION
 
   cpan Test::ModuleVersion
